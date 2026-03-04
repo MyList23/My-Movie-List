@@ -1,0 +1,269 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kevin Movie Recommendations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #141414;
+    color: white;
+}
+
+header {
+    padding: 30px 40px;
+    background-color: #000;
+    position: relative;
+}
+
+h1 {
+    color: #278BF5;
+    margin: 0;
+}
+
+.subtitle {
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+#adminButton {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    background-color: #278BF5;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+#adminButton:hover {
+    background-color: #1a5dbb;
+}
+
+#adminForm {
+    display: none;
+    padding: 20px 40px;
+    background-color: #1f1f1f;
+}
+
+#adminForm input {
+    padding: 6px 10px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: none;
+    width: 200px;
+}
+
+#adminForm button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #278BF5;
+    color: white;
+    cursor: pointer;
+}
+
+#adminForm button:hover {
+    background-color: #1a5dbb;
+}
+
+.movie-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 40px;
+}
+
+.movie-card {
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: scale(1.08);
+}
+
+.movie-poster {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    background-color: #333;
+}
+
+.movie-info {
+    padding: 15px;
+}
+
+.movie-title {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.movie-rating {
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.trailer-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 10px;
+    background-color: #e50914;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.trailer-btn:hover {
+    background-color: #b20710;
+}
+
+.remove-btn {
+    margin-top: 10px;
+    background: #555;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: white;
+}
+
+.remove-btn:hover {
+    background: #888;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Kevin Movie Recommendations</h1>
+    <div class="subtitle">Hand-picked movies worth your time</div>
+    <button id="adminButton">Admin Mode</button>
+</header>
+
+<div id="adminForm">
+    <input type="text" id="newMovieTitle" placeholder="Movie Title">
+    <input type="text" id="newMovieTrailer" placeholder="Trailer URL">
+    <button id="addMovieBtn">Add Movie</button>
+</div>
+
+<div class="movie-container" id="movieContainer">Loading movies...</div>
+
+<script>
+const apiKey = "f994ef9b";
+
+// Full initial movie list
+let movies = [
+    { title: "The Dark Knight", trailer: "https://www.youtube.com/watch?v=EXeTwQWrcwY" },
+    { title: "The Accountant", trailer: "https://www.youtube.com/watch?v=DBfsgcswlYQ" },
+    { title: "Gone Girl", trailer: "https://www.youtube.com/watch?v=2-_-1nJf8Vg&t=9s" },
+    { title: "King Kong", trailer: "https://www.youtube.com/watch?v=1TSidCNA7mQ" },
+    { title: "Warrior", trailer: "https://www.youtube.com/watch?v=I5kzcwcQA1Q" },
+    { title: "The Beekeeper", trailer: "https://www.youtube.com/watch?v=SzINZZ6iqxY" },
+    { title: "Sinners", trailer: "https://www.youtube.com/watch?v=bKGxHflevuk" },
+    { title: "Suzume", trailer: "https://www.youtube.com/watch?v=IfKNOUUtyCA" },
+    { title: "Inglourious Basterds", trailer: "https://www.youtube.com/watch?v=KnrRy6kSFF0" },
+    { title: "The Intouchables", trailer: "https://www.youtube.com/watch?v=34WIbmXkewU" },
+    { title: "Miracle at St. Anna", trailer: "https://www.youtube.com/watch?v=1JVj2eSuBTE" },
+    { title: "Ford v Ferrari", trailer: "https://www.youtube.com/watch?v=zyYgDtY2AMY" },
+    { title: "The Social Network", trailer: "https://www.youtube.com/watch?v=lB95KLmpLR4" },
+    { title: "Glory Road", trailer: "https://www.youtube.com/watch?v=uEd69QSBI0s" },
+    { title: "Zathura: A Space Adventure", trailer: "https://www.youtube.com/watch?v=zNxm_obDpNU" },
+    { title: "The Book of Eli", trailer: "https://www.youtube.com/watch?v=zSMHmtaoXtI" },
+    { title: "Coraline", trailer: "https://www.youtube.com/watch?v=m9bOpeuvNwY" }
+];
+
+const container = document.getElementById("movieContainer");
+
+// Admin password (change this to your own secret)
+const adminPassword = "kevin123";
+let isAdmin = false;
+
+// Render movies
+function renderMovies() {
+    container.innerHTML = "";
+    movies.forEach((movie, index) => {
+        fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.title)}&apikey=${apiKey}`)
+            .then(res => res.json())
+            .then(data => {
+                const poster = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/300x450?text=No+Image";
+                const rating = data.imdbRating !== "N/A" ? parseFloat(data.imdbRating) : 0;
+                let ratingColor = '#db2360';
+                if (rating >= 8) ratingColor = '#21d07a';
+                else if (rating >= 5) ratingColor = '#d2d531';
+
+                const card = document.createElement("div");
+                card.className = "movie-card";
+
+                const removeBtnHTML = isAdmin ? `<button class="remove-btn">Remove</button>` : "";
+
+                card.innerHTML = `
+                    <img class="movie-poster" src="${poster}" alt="${movie.title} Poster" loading="lazy">
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-rating" style="color:${ratingColor}">IMDb ★ ${data.imdbRating || "N/A"}</div>
+                        <a class="trailer-btn" href="${movie.trailer}" target="_blank" rel="noopener noreferrer">Trailer</a>
+                        ${removeBtnHTML}
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                // Remove functionality
+                if (isAdmin) {
+                    const removeBtn = card.querySelector(".remove-btn");
+                    removeBtn.addEventListener("click", () => {
+                        if (confirm(`Remove "${movie.title}" from the list?`)) {
+                            movies.splice(index, 1);
+                            renderMovies();
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error(`Error fetching ${movie.title}: ${err.message}`));
+    });
+}
+
+// Initial render
+renderMovies();
+
+// Admin Mode button
+document.getElementById("adminButton").addEventListener("click", () => {
+    const password = prompt("Enter admin password:");
+    if (password === adminPassword) {
+        isAdmin = true;
+        document.getElementById("adminForm").style.display = "block";
+        renderMovies(); // re-render to show remove buttons
+        alert("Admin mode unlocked!");
+    } else {
+        alert("Incorrect password!");
+    }
+});
+
+// Add movie
+document.getElementById("addMovieBtn").addEventListener("click", () => {
+    const title = document.getElementById("newMovieTitle").value.trim();
+    const trailer = document.getElementById("newMovieTrailer").value.trim();
+    if (!title || !trailer) {
+        alert("Please enter both title and trailer URL!");
+        return;
+    }
+    movies.push({ title, trailer });
+    renderMovies();
+    document.getElementById("newMovieTitle").value = "";
+    document.getElementById("newMovieTrailer").value = "";
+});
+</script>
+
+</body>
+</html>
