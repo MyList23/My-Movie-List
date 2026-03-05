@@ -1,268 +1,504 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Kevin Movie Recommendations</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Kevin Movie Recommendations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: #141414;
-    color: white;
-}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
 
-header {
-    padding: 30px 40px;
-    background-color: #000;
-    position: relative;
-}
+    :root {
+      --blue: #278BF5;
+      --blue-dark: #1a5dbb;
+      --red: #e50914;
+      --red-dark: #b20710;
+      --bg: #141414;
+      --card-bg: #1a1a1a;
+      --card-hover: #222;
+      --text-muted: rgba(255,255,255,0.5);
+    }
 
-h1 {
-    color: #278BF5;
-    margin: 0;
-}
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: white;
+    }
 
-.subtitle {
-    opacity: 0.7;
-    margin-top: 5px;
-}
+    header {
+      padding: 30px 40px;
+      background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
 
-#adminButton {
-    position: absolute;
-    top: 20px;
-    right: 40px;
-    background-color: #278BF5;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-    font-size: 0.8rem;
-}
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      color: var(--blue);
+      margin: 0;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+    }
 
-#adminButton:hover {
-    background-color: #1a5dbb;
-}
+    .subtitle {
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
 
-#adminForm {
-    display: none;
-    padding: 20px 40px;
-    background-color: #1f1f1f;
-}
+    #adminButton {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      background-color: var(--blue);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s;
+    }
 
-#adminForm input {
-    padding: 6px 10px;
-    margin-right: 10px;
-    border-radius: 4px;
-    border: none;
-    width: 200px;
-}
+    #adminButton:hover { background-color: var(--blue-dark); }
 
-#adminForm button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    background-color: #278BF5;
-    color: white;
-    cursor: pointer;
-}
+    #adminForm {
+      display: none;
+      padding: 16px 40px;
+      background-color: #111;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-#adminForm button:hover {
-    background-color: #1a5dbb;
-}
+    #adminForm input {
+      padding: 7px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: #1f1f1f;
+      color: white;
+      width: 220px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+    }
 
-.movie-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 40px;
-}
+    #adminForm input::placeholder { color: rgba(255,255,255,0.35); }
 
-.movie-card {
-    background-color: #1f1f1f;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-}
+    #adminForm button {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 4px;
+      background-color: var(--blue);
+      color: white;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      transition: background 0.2s;
+    }
 
-.movie-card:hover {
-    transform: scale(1.08);
-}
+    #adminForm button:hover { background-color: var(--blue-dark); }
 
-.movie-poster {
-    width: 100%;
-    height: 300px;
-    object-fit: cover;
-    background-color: #333;
-}
+    /* Grid */
+    .movie-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 24px;
+      padding: 40px;
+    }
 
-.movie-info {
-    padding: 15px;
-}
+    /* Card */
+    .movie-card {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
 
-.movie-title {
-    font-size: 1rem;
-    font-weight: bold;
-}
+    .movie-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
 
-.movie-rating {
-    font-size: 0.85rem;
-    margin-top: 5px;
-}
+    .poster-wrap {
+      position: relative;
+      overflow: hidden;
+    }
 
-.trailer-btn {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 6px 10px;
-    background-color: #e50914;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
+    .movie-poster {
+      width: 100%;
+      height: 310px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.35s ease;
+    }
 
-.trailer-btn:hover {
-    background-color: #b20710;
-}
+    .movie-card:hover .movie-poster {
+      transform: scale(1.04);
+    }
 
-.remove-btn {
-    margin-top: 10px;
-    background: #555;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    color: white;
-}
+    .movie-info {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
 
-.remove-btn:hover {
-    background: #888;
-}
-</style>
+    .movie-title {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 5px;
+    }
+
+    .movie-rating {
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .movie-meta {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 8px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .movie-meta .sep { opacity: 0.5; }
+
+    .genre-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .genre-chip {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(39,139,245,0.35);
+      color: rgba(39,139,245,0.85);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .movie-crew {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.42);
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .movie-crew span {
+      color: rgba(255,255,255,0.65);
+      font-weight: 500;
+    }
+
+    /* Description */
+    .desc-wrap {
+      position: relative;
+      margin-bottom: 14px;
+      flex: 1;
+    }
+
+    .movie-description {
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.6);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: none;
+    }
+
+    .movie-description.expanded {
+      display: block;
+      overflow: visible;
+      -webkit-line-clamp: unset;
+      -webkit-box-orient: unset;
+    }
+
+    .read-more-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      margin-top: 4px;
+      color: var(--blue);
+      font-size: 0.75rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      display: none;
+    }
+
+    .read-more-btn:hover {
+      text-decoration: underline;
+    }
+
+    .movie-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+
+    .trailer-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      background-color: var(--red);
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .trailer-btn:hover { background-color: var(--red-dark); }
+
+    .remove-btn {
+      background: rgba(255,255,255,0.08);
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .remove-btn:hover {
+      background: rgba(255,80,80,0.2);
+      color: #ff6b6b;
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 10px;
+      height: 420px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .loading-text {
+      padding: 60px 40px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-    <h1>Kevin Movie Recommendations</h1>
-    <div class="subtitle">Hand-picked movies worth your time</div>
-    <button id="adminButton">Admin Mode</button>
+  <h1>Kevin Movie Recommendations</h1>
+  <div class="subtitle">Hand-picked movies worth your time</div>
+  <button id="adminButton">Admin Mode</button>
 </header>
 
 <div id="adminForm">
-    <input type="text" id="newMovieTitle" placeholder="Movie Title">
-    <input type="text" id="newMovieTrailer" placeholder="Trailer URL">
-    <button id="addMovieBtn">Add Movie</button>
+  <input type="text" id="newMovieTitle" placeholder="Movie Title">
+  <input type="text" id="newMovieTrailer" placeholder="Trailer URL">
+  <button id="addMovieBtn">Add Movie</button>
 </div>
 
-<div class="movie-container" id="movieContainer">Loading movies...</div>
+<div class="movie-container" id="movieContainer">
+  <div class="loading-text">Loading movies…</div>
+</div>
 
 <script>
-const apiKey = "f994ef9b";
+  const apiKey = "f994ef9b";
+  const adminPassword = "kevin123";
+  let isAdmin = false;
+  let movies = [];
+  const webAppURL = "https://script.google.com/macros/s/AKfycbz0jWLF1hj0RQOlGo43-apICVTHfx9TkHBcHTcPaAwlI-jW2GO6QuiU12vEHWE-qB7gdw/exec";
 
-// Full initial movie list
-let movies = [
-    { title: "The Dark Knight", trailer: "https://www.youtube.com/watch?v=EXeTwQWrcwY" },
-    { title: "The Accountant", trailer: "https://www.youtube.com/watch?v=DBfsgcswlYQ" },
-    { title: "Gone Girl", trailer: "https://www.youtube.com/watch?v=2-_-1nJf8Vg&t=9s" },
-    { title: "King Kong", trailer: "https://www.youtube.com/watch?v=1TSidCNA7mQ" },
-    { title: "Warrior", trailer: "https://www.youtube.com/watch?v=I5kzcwcQA1Q" },
-    { title: "The Beekeeper", trailer: "https://www.youtube.com/watch?v=SzINZZ6iqxY" },
-    { title: "Sinners", trailer: "https://www.youtube.com/watch?v=bKGxHflevuk" },
-    { title: "Suzume", trailer: "https://www.youtube.com/watch?v=IfKNOUUtyCA" },
-    { title: "Inglourious Basterds", trailer: "https://www.youtube.com/watch?v=KnrRy6kSFF0" },
-    { title: "The Intouchables", trailer: "https://www.youtube.com/watch?v=34WIbmXkewU" },
-    { title: "Miracle at St. Anna", trailer: "https://www.youtube.com/watch?v=1JVj2eSuBTE" },
-    { title: "Ford v Ferrari", trailer: "https://www.youtube.com/watch?v=zyYgDtY2AMY" },
-    { title: "The Social Network", trailer: "https://www.youtube.com/watch?v=lB95KLmpLR4" },
-    { title: "Glory Road", trailer: "https://www.youtube.com/watch?v=uEd69QSBI0s" },
-    { title: "Zathura: A Space Adventure", trailer: "https://www.youtube.com/watch?v=zNxm_obDpNU" },
-    { title: "The Book of Eli", trailer: "https://www.youtube.com/watch?v=zSMHmtaoXtI" },
-    { title: "Coraline", trailer: "https://www.youtube.com/watch?v=m9bOpeuvNwY" }
-];
+  const container = document.getElementById("movieContainer");
 
-const container = document.getElementById("movieContainer");
+  async function fetchMovies() {
+    try {
+      const res = await fetch(webAppURL, { redirect: "follow" });
+      movies = await res.json();
+      renderMovies();
+    } catch (err) {
+      console.error("Error fetching movies:", err);
+      container.innerHTML = "<p style='padding:40px;color:rgba(255,255,255,0.4)'>Failed to load movies.</p>";
+    }
+  }
 
-// Admin password (change this to your own secret)
-const adminPassword = "kevin123";
-let isAdmin = false;
-
-// Render movies
-function renderMovies() {
+  function renderMovies() {
     container.innerHTML = "";
-    movies.forEach((movie, index) => {
-        fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.title)}&apikey=${apiKey}`)
-            .then(res => res.json())
-            .then(data => {
-                const poster = data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/300x450?text=No+Image";
-                const rating = data.imdbRating !== "N/A" ? parseFloat(data.imdbRating) : 0;
-                let ratingColor = '#db2360';
-                if (rating >= 8) ratingColor = '#21d07a';
-                else if (rating >= 5) ratingColor = '#d2d531';
 
-                const card = document.createElement("div");
-                card.className = "movie-card";
-
-                const removeBtnHTML = isAdmin ? `<button class="remove-btn">Remove</button>` : "";
-
-                card.innerHTML = `
-                    <img class="movie-poster" src="${poster}" alt="${movie.title} Poster" loading="lazy">
-                    <div class="movie-info">
-                        <div class="movie-title">${movie.title}</div>
-                        <div class="movie-rating" style="color:${ratingColor}">IMDb ★ ${data.imdbRating || "N/A"}</div>
-                        <a class="trailer-btn" href="${movie.trailer}" target="_blank" rel="noopener noreferrer">Trailer</a>
-                        ${removeBtnHTML}
-                    </div>
-                `;
-
-                container.appendChild(card);
-
-                // Remove functionality
-                if (isAdmin) {
-                    const removeBtn = card.querySelector(".remove-btn");
-                    removeBtn.addEventListener("click", () => {
-                        if (confirm(`Remove "${movie.title}" from the list?`)) {
-                            movies.splice(index, 1);
-                            renderMovies();
-                        }
-                    });
-                }
-            })
-            .catch(err => console.error(`Error fetching ${movie.title}: ${err.message}`));
+    // Show skeletons while loading
+    movies.forEach(() => {
+      const skel = document.createElement("div");
+      skel.className = "skeleton";
+      container.appendChild(skel);
     });
-}
 
-// Initial render
-renderMovies();
+    const movieSnapshot = [...movies];
+    const skeletons = container.querySelectorAll(".skeleton");
 
-// Admin Mode button
-document.getElementById("adminButton").addEventListener("click", () => {
+    movieSnapshot.forEach((movie, index) => {
+      fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.title)}&apikey=${apiKey}`)
+        .then(res => res.json())
+        .then(data => {
+          const poster = data.Poster && data.Poster !== "N/A"
+            ? data.Poster
+            : "https://via.placeholder.com/300x450?text=No+Image";
+
+          const rating = data.imdbRating && data.imdbRating !== "N/A"
+            ? parseFloat(data.imdbRating) : 0;
+
+          let ratingColor = '#db2360';
+          if (rating >= 8) ratingColor = '#21d07a';
+          else if (rating >= 5) ratingColor = '#d2d531';
+
+          // Plot / description from OMDB
+          const description = data.Plot && data.Plot !== "N/A"
+            ? data.Plot : "No description available.";
+
+          const year = data.Year && data.Year !== "N/A" ? data.Year : "";
+          const runtime = data.Runtime && data.Runtime !== "N/A" ? data.Runtime : "";
+          const director = data.Director && data.Director !== "N/A" ? data.Director : "";
+          const actors = data.Actors && data.Actors !== "N/A" ? data.Actors : "";
+          const genres = data.Genre && data.Genre !== "N/A"
+            ? data.Genre.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
+
+          const metaParts = [year, runtime].filter(Boolean);
+          const metaHTML = metaParts.length
+            ? `<div class="movie-meta">${metaParts.join('<span class="sep">·</span>')}</div>` : "";
+
+          const genreHTML = genres ? `<div class="genre-chips">${genres}</div>` : "";
+
+          const crewHTML = (director || actors) ? `
+            <div class="movie-crew">
+              ${director ? `<div>Dir. <span>${director}</span></div>` : ""}
+              ${actors ? `<div>Cast <span>${actors}</span></div>` : ""}
+            </div>` : "";
+
+          const card = document.createElement("div");
+          card.className = "movie-card";
+
+          const removeBtnHTML = isAdmin
+            ? `<button class="remove-btn">Remove</button>` : "";
+
+          card.innerHTML = `
+            <div class="poster-wrap">
+              <img class="movie-poster" src="${poster}" alt="${movie.title} Poster" loading="lazy">
+            </div>
+            <div class="movie-info">
+              <div class="movie-title">${movie.title}</div>
+              <div class="movie-rating" style="color:${ratingColor}">★ ${data.imdbRating || "N/A"} IMDb</div>
+              ${metaHTML}
+              ${genreHTML}
+              ${crewHTML}
+              <div class="desc-wrap">
+                <p class="movie-description">${description}</p>
+                <button class="read-more-btn">Read more ›</button>
+              </div>
+              <div class="movie-actions">
+                <a class="trailer-btn" href="${movie.trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>
+                ${removeBtnHTML}
+              </div>
+            </div>
+          `;
+
+          // Replace the skeleton at the same position
+          if (skeletons[index]) {
+            container.replaceChild(card, skeletons[index]);
+          } else {
+            container.appendChild(card);
+          }
+
+          // Show "Read more" only if text is actually clamped
+          const descEl = card.querySelector(".movie-description");
+          const btn = card.querySelector(".read-more-btn");
+          if (descEl.scrollHeight > descEl.clientHeight + 2) {
+            btn.style.display = "inline";
+            btn.addEventListener("click", () => {
+              const expanded = descEl.classList.toggle("expanded");
+              btn.textContent = expanded ? "Read less ‹" : "Read more ›";
+            });
+          }
+
+          if (isAdmin) {
+            card.querySelector(".remove-btn").addEventListener("click", async () => {
+              if (confirm(`Remove "${movie.title}" from the list?`)) {
+                try {
+                  await fetch(`${webAppURL}?action=remove&index=${index}`, { redirect: "follow" });
+                  await fetchMovies();
+                } catch (err) {
+                  alert("Failed to remove movie.");
+                  console.error(err);
+                }
+              }
+            });
+          }
+        })
+        .catch(err => {
+          console.error(`Error fetching OMDB for ${movie.title}:`, err);
+          if (skeletons[index]) skeletons[index].remove();
+        });
+    });
+  }
+
+  document.getElementById("adminButton").addEventListener("click", () => {
     const password = prompt("Enter admin password:");
     if (password === adminPassword) {
-        isAdmin = true;
-        document.getElementById("adminForm").style.display = "block";
-        renderMovies(); // re-render to show remove buttons
-        alert("Admin mode unlocked!");
+      isAdmin = true;
+      document.getElementById("adminForm").style.display = "flex";
+      document.getElementById("adminButton").textContent = "Admin: ON";
+      renderMovies();
+      alert("Admin mode unlocked!");
     } else {
-        alert("Incorrect password!");
+      alert("Incorrect password!");
     }
-});
+  });
 
-// Add movie
-document.getElementById("addMovieBtn").addEventListener("click", () => {
+  document.getElementById("addMovieBtn").addEventListener("click", async () => {
     const title = document.getElementById("newMovieTitle").value.trim();
     const trailer = document.getElementById("newMovieTrailer").value.trim();
+
     if (!title || !trailer) {
-        alert("Please enter both title and trailer URL!");
-        return;
+      alert("Please enter both a movie title and trailer URL!");
+      return;
     }
-    movies.push({ title, trailer });
-    renderMovies();
-    document.getElementById("newMovieTitle").value = "";
-    document.getElementById("newMovieTrailer").value = "";
-});
+
+    try {
+      await fetch(
+        `${webAppURL}?action=add&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailer)}`,
+        { redirect: "follow" }
+      );
+      document.getElementById("newMovieTitle").value = "";
+      document.getElementById("newMovieTrailer").value = "";
+      await fetchMovies();
+    } catch (err) {
+      alert("Failed to add movie.");
+      console.error(err);
+    }
+  });
+
+  fetchMovies();
 </script>
 
 </body>
