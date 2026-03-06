@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kevin's Movie Recommendations</title>
+  <title>Kevin Movie Recommendations</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
@@ -14,10 +14,11 @@
       --blue-dark: #1a5dbb;
       --red: #e50914;
       --red-dark: #b20710;
+      --green: #21d07a;
       --bg: #141414;
       --card-bg: #1a1a1a;
-      --card-hover: #222;
       --text-muted: rgba(255,255,255,0.5);
+      --sidebar-width: 360px;
     }
 
     body {
@@ -27,6 +28,7 @@
       color: white;
     }
 
+    /* ── Header ── */
     header {
       padding: 30px 40px;
       background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
@@ -48,10 +50,16 @@
       font-size: 0.9rem;
     }
 
-    #adminButton {
+    .header-btns {
       position: absolute;
       top: 20px;
       right: 40px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .header-btns button {
       background-color: var(--blue);
       border: none;
       padding: 6px 14px;
@@ -63,8 +71,20 @@
       transition: background 0.2s;
     }
 
-    #adminButton:hover { background-color: var(--blue-dark); }
+    .header-btns button:hover { background-color: var(--blue-dark); }
 
+    #watchlistCount {
+      display: none;
+      background: white;
+      color: var(--blue);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* ── Admin form ── */
     #adminForm {
       display: none;
       padding: 16px 40px;
@@ -102,7 +122,7 @@
 
     #adminForm button:hover { background-color: var(--blue-dark); }
 
-    /* Grid */
+    /* ── Grid ── */
     .movie-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -110,7 +130,7 @@
       padding: 40px;
     }
 
-    /* Card */
+    /* ── Card ── */
     .movie-card {
       background-color: var(--card-bg);
       border-radius: 10px;
@@ -139,9 +159,7 @@
       transition: transform 0.35s ease;
     }
 
-    .movie-card:hover .movie-poster {
-      transform: scale(1.04);
-    }
+    .movie-card:hover .movie-poster { transform: scale(1.04); }
 
     .movie-info {
       padding: 14px 16px 16px;
@@ -204,7 +222,6 @@
       font-weight: 500;
     }
 
-    /* Description */
     .desc-wrap {
       position: relative;
       margin-bottom: 14px;
@@ -220,7 +237,6 @@
       -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      transition: none;
     }
 
     .movie-description.expanded {
@@ -242,9 +258,7 @@
       display: none;
     }
 
-    .read-more-btn:hover {
-      text-decoration: underline;
-    }
+    .read-more-btn:hover { text-decoration: underline; }
 
     .movie-actions {
       display: flex;
@@ -280,12 +294,9 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    .remove-btn:hover {
-      background: rgba(255,80,80,0.2);
-      color: #ff6b6b;
-    }
+    .remove-btn:hover { background: rgba(255,80,80,0.2); color: #ff6b6b; }
 
-    /* Loading skeleton */
+    /* ── Skeleton ── */
     .skeleton {
       background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
       background-size: 200% 100%;
@@ -295,7 +306,7 @@
     }
 
     @keyframes shimmer {
-      0% { background-position: 200% 0; }
+      0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
 
@@ -304,15 +315,269 @@
       color: var(--text-muted);
       font-size: 0.95rem;
     }
+
+    /* ── Watchlist Sidebar ── */
+    #watchlistOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    #watchlistOverlay.open { display: block; }
+
+    #watchlistSidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: #111;
+      border-left: 1px solid rgba(255,255,255,0.08);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    #watchlistSidebar.open { transform: translateX(0); }
+
+    #watchlistHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+
+    #watchlistClose {
+      background: rgba(255,255,255,0.07);
+      border: none;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    #watchlistClose:hover { background: rgba(255,255,255,0.15); }
+
+    /* Add to watchlist input row */
+    #watchlistAddRow {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #watchlistAddRow input {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #1a1a1a;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    #watchlistAddRow input::placeholder { color: rgba(255,255,255,0.3); }
+
+    #watchlistAddRow button {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 5px;
+      background: var(--blue);
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    #watchlistAddRow button:hover { background: var(--blue-dark); }
+
+    #watchlistItems {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #watchlistItems::-webkit-scrollbar { width: 4px; }
+    #watchlistItems::-webkit-scrollbar-track { background: transparent; }
+    #watchlistItems::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    .watchlist-empty {
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      margin-top: 40px;
+    }
+
+    /* Watchlist item card */
+    .watchlist-item {
+      background: #1a1a1a;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden;
+      animation: slideIn 0.2s ease;
+    }
+
+    .watchlist-item.watched-item {
+      opacity: 0.55;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .watchlist-item-main {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px;
+    }
+
+    .watchlist-item img {
+      width: 46px;
+      height: 66px;
+      object-fit: cover;
+      border-radius: 4px;
+      flex-shrink: 0;
+      background: #333;
+    }
+
+    .watchlist-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .watchlist-item-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .watchlist-item-meta {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 6px;
+    }
+
+    .watchlist-item-watched {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .watchlist-item-watched input[type="checkbox"] {
+      accent-color: var(--green);
+      cursor: pointer;
+      width: 13px;
+      height: 13px;
+    }
+
+    .watchlist-item-watched.checked { color: var(--green); }
+
+    .watchlist-item-remove {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.2);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+
+    .watchlist-item-remove:hover { color: #ff6b6b; background: rgba(255,80,80,0.1); }
+
+    /* Promote row — shown when watched */
+    .watchlist-promote-row {
+      display: none;
+      padding: 8px 10px 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .watchlist-promote-row.visible { display: flex; }
+
+    .watchlist-promote-row input {
+      flex: 1;
+      min-width: 0;
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #222;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+    }
+
+    .watchlist-promote-row input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .promote-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      background: var(--green);
+      color: #000;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .promote-btn:hover { opacity: 0.85; }
+
+    .watchlist-status {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      padding: 10px;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      min-height: 36px;
+    }
   </style>
 </head>
 
 <body>
 
 <header>
-  <h1>Kevin Movie Recommendations</h1>
+  <h1>Kevin's Movie Recommendations</h1>
   <div class="subtitle">Hand-picked movies worth your time</div>
-  <button id="adminButton">Admin Mode</button>
+  <div class="header-btns">
+    <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
+    <button id="adminButton">Admin Mode</button>
+  </div>
 </header>
 
 <div id="adminForm">
@@ -321,23 +586,236 @@
   <button id="addMovieBtn">Add Movie</button>
 </div>
 
+<!-- Watchlist Sidebar -->
+<div id="watchlistOverlay"></div>
+<div id="watchlistSidebar">
+  <div id="watchlistHeader">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:1px;color:var(--blue)">🎬 My Watchlist</span>
+    <button id="watchlistClose">✕</button>
+  </div>
+
+  <div id="watchlistAddRow">
+    <input type="text" id="watchlistInput" placeholder="Add a movie to check out…">
+    <button id="watchlistAddBtn">+ Add</button>
+  </div>
+
+  <div id="watchlistItems">
+    <div class="watchlist-empty">Nothing here yet.<br>Type a title above to add it!</div>
+  </div>
+  <div class="watchlist-status" id="watchlistStatus"></div>
+</div>
+
 <div class="movie-container" id="movieContainer">
   <div class="loading-text">Loading movies…</div>
 </div>
 
 <script>
-  const apiKey = "f994ef9b";
-  const adminPassword = "Kevin1209";
-  let isAdmin = false;
-  let movies = [];
-  const webAppURL = "https://script.google.com/macros/s/AKfycbz0jWLF1hj0RQOlGo43-apICVTHfx9TkHBcHTcPaAwlI-jW2GO6QuiU12vEHWE-qB7gdw/exec";
+  const apiKey        = "f994ef9b";
+  const adminPassword = "kevin123";
+  const webAppURL     = "https://script.google.com/macros/s/AKfycbx39rXvDXduoYIrGF75V5sGs3elqTXrdZQn-DNaF4_fLda73ZWMyaGYw0LBSEArPIBBaw/exec";
+
+  let isAdmin   = false;
+  let movies    = [];
+  let watchlist = []; // [{ title, poster, year, rating, watched }]
 
   const container = document.getElementById("movieContainer");
 
+  // ── Watchlist: load & save ────────────────────────────────────────────
+  async function fetchWatchlist() {
+    try {
+      const res  = await fetch(`${webAppURL}?action=getWatchlist`, { redirect: "follow" });
+      const data = await res.json();
+      watchlist  = Array.isArray(data) ? data : [];
+    } catch (e) {
+      console.warn("Could not load watchlist:", e);
+      watchlist = [];
+    }
+    renderWatchlist();
+  }
+
+  async function saveWatchlist() {
+    setStatus("Saving…");
+    try {
+      await fetch(
+        `${webAppURL}?action=saveWatchlist&data=${encodeURIComponent(JSON.stringify(watchlist))}`,
+        { redirect: "follow" }
+      );
+      setStatus("Saved ✓");
+      setTimeout(() => setStatus(""), 2500);
+    } catch (e) {
+      setStatus("Save failed");
+      console.error(e);
+    }
+  }
+
+  function setStatus(msg) {
+    document.getElementById("watchlistStatus").textContent = msg;
+  }
+
+  // ── Watchlist: add by typing title ───────────────────────────────────
+  async function addToWatchlist(title) {
+    if (!title) return;
+    if (watchlist.some(w => w.title.toLowerCase() === title.toLowerCase())) {
+      setStatus("Already in your watchlist!");
+      setTimeout(() => setStatus(""), 2000);
+      return;
+    }
+
+    setStatus("Looking up movie…");
+
+    // Fetch OMDB data so we have the poster, year, rating right away
+    let poster = "https://via.placeholder.com/300x450?text=No+Image";
+    let year   = "";
+    let rating = "";
+    let found  = title; // may be corrected by OMDB
+
+    try {
+      const res  = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`);
+      const data = await res.json();
+      if (data.Response === "True") {
+        found  = data.Title || title;
+        poster = data.Poster && data.Poster !== "N/A" ? data.Poster : poster;
+        year   = data.Year   && data.Year   !== "N/A" ? data.Year   : "";
+        rating = data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : "";
+      }
+    } catch (e) { /* use defaults */ }
+
+    watchlist.push({ title: found, poster, year, rating, watched: false });
+    await saveWatchlist();
+    updateWatchlistCount();
+    renderWatchlist();
+  }
+
+  function removeFromWatchlist(title) {
+    watchlist = watchlist.filter(w => w.title !== title);
+    saveWatchlist();
+    renderWatchlist();
+    updateWatchlistCount();
+  }
+
+  function toggleWatched(title) {
+    const item = watchlist.find(w => w.title === title);
+    if (item) {
+      item.watched = !item.watched;
+      // Unwatched float to top, watched sink to bottom (stable sort)
+      const unwatched = watchlist.filter(w => !w.watched);
+      const watched   = watchlist.filter(w =>  w.watched);
+      watchlist = [...unwatched, ...watched];
+      saveWatchlist();
+      renderWatchlist();
+    }
+  }
+
+  function updateWatchlistCount() {
+    const el      = document.getElementById("watchlistCount");
+    const pending = watchlist.filter(w => !w.watched).length;
+    if (watchlist.length > 0) {
+      el.style.display = "inline";
+      el.textContent   = pending > 0 ? pending : "✓";
+    } else {
+      el.style.display = "none";
+    }
+  }
+
+  // ── Watchlist: promote to main site ──────────────────────────────────
+  async function promoteToSite(title, trailerURL) {
+    if (!trailerURL) { setStatus("Paste a trailer URL first!"); setTimeout(() => setStatus(""), 2000); return; }
+    setStatus("Adding to site…");
+    try {
+      await fetch(
+        `${webAppURL}?action=add&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailerURL)}`,
+        { redirect: "follow" }
+      );
+      // Remove from watchlist now that it's on the main site
+      removeFromWatchlist(title);
+      await fetchMovies();
+      setStatus("Added to recommendations! ✓");
+      setTimeout(() => setStatus(""), 3000);
+    } catch (e) {
+      setStatus("Failed to add to site");
+      console.error(e);
+    }
+  }
+
+  // ── Watchlist: render sidebar ─────────────────────────────────────────
+  function renderWatchlist() {
+    const el = document.getElementById("watchlistItems");
+    updateWatchlistCount();
+
+    if (watchlist.length === 0) {
+      el.innerHTML = `<div class="watchlist-empty">Nothing here yet.<br>Type a title above to add it!</div>`;
+      return;
+    }
+
+    el.innerHTML = "";
+    watchlist.forEach(item => {
+      const div     = document.createElement("div");
+      div.className = `watchlist-item${item.watched ? ' watched-item' : ''}`;
+
+      div.innerHTML = `
+        <div class="watchlist-item-main">
+          <img src="${item.poster}" alt="${item.title}">
+          <div class="watchlist-item-info">
+            <div class="watchlist-item-title">${item.title}</div>
+            <div class="watchlist-item-meta">${[item.year, item.rating ? '★ ' + item.rating : ''].filter(Boolean).join(' · ')}</div>
+            <label class="watchlist-item-watched ${item.watched ? 'checked' : ''}">
+              <input type="checkbox" ${item.watched ? 'checked' : ''}>${item.watched ? 'Watched ✓' : 'Mark as watched'}
+            </label>
+          </div>
+          <button class="watchlist-item-remove" title="Remove">✕</button>
+        </div>
+        <div class="watchlist-promote-row ${item.watched ? 'visible' : ''}">
+          <input type="text" placeholder="Paste trailer URL to recommend it…" class="promote-input">
+          <button class="promote-btn">➕ Add to Site</button>
+        </div>
+      `;
+
+      div.querySelector("input[type='checkbox']").addEventListener("change", function() { toggleWatched(item.title); });
+      div.querySelector(".watchlist-item-remove").addEventListener("click", () => removeFromWatchlist(item.title));
+      div.querySelector(".promote-btn").addEventListener("click", () => {
+        const url = div.querySelector(".promote-input").value.trim();
+        promoteToSite(item.title, url);
+      });
+
+      el.appendChild(div);
+    });
+  }
+
+  // ── Sidebar open / close ──────────────────────────────────────────────
+  function openSidebar()  {
+    document.getElementById("watchlistSidebar").classList.add("open");
+    document.getElementById("watchlistOverlay").classList.add("open");
+    document.getElementById("watchlistInput").focus();
+  }
+
+  function closeSidebar() {
+    document.getElementById("watchlistSidebar").classList.remove("open");
+    document.getElementById("watchlistOverlay").classList.remove("open");
+  }
+
+  document.getElementById("watchlistToggle").addEventListener("click", openSidebar);
+  document.getElementById("watchlistClose").addEventListener("click", closeSidebar);
+  document.getElementById("watchlistOverlay").addEventListener("click", closeSidebar);
+
+  document.getElementById("watchlistAddBtn").addEventListener("click", () => {
+    const input = document.getElementById("watchlistInput");
+    const val   = input.value.trim();
+    if (val) { addToWatchlist(val); input.value = ""; }
+  });
+
+  document.getElementById("watchlistInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const input = document.getElementById("watchlistInput");
+      const val   = input.value.trim();
+      if (val) { addToWatchlist(val); input.value = ""; }
+    }
+  });
+
+  // ── Movies ────────────────────────────────────────────────────────────
   async function fetchMovies() {
     try {
       const res = await fetch(webAppURL, { redirect: "follow" });
-      movies = await res.json();
+      movies    = await res.json();
       renderMovies();
     } catch (err) {
       console.error("Error fetching movies:", err);
@@ -347,8 +825,6 @@
 
   function renderMovies() {
     container.innerHTML = "";
-
-    // Show skeletons while loading
     movies.forEach(() => {
       const skel = document.createElement("div");
       skel.className = "skeleton";
@@ -356,15 +832,14 @@
     });
 
     const movieSnapshot = [...movies];
-    const skeletons = container.querySelectorAll(".skeleton");
+    const skeletons     = container.querySelectorAll(".skeleton");
 
     movieSnapshot.forEach((movie, index) => {
       fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.title)}&apikey=${apiKey}`)
         .then(res => res.json())
         .then(data => {
           const poster = data.Poster && data.Poster !== "N/A"
-            ? data.Poster
-            : "https://via.placeholder.com/300x450?text=No+Image";
+            ? data.Poster : "https://via.placeholder.com/300x450?text=No+Image";
 
           const rating = data.imdbRating && data.imdbRating !== "N/A"
             ? parseFloat(data.imdbRating) : 0;
@@ -373,35 +848,27 @@
           if (rating >= 8) ratingColor = '#21d07a';
           else if (rating >= 5) ratingColor = '#d2d531';
 
-          // Plot / description from OMDB
-          const description = data.Plot && data.Plot !== "N/A"
-            ? data.Plot : "No description available.";
-
-          const year = data.Year && data.Year !== "N/A" ? data.Year : "";
-          const runtime = data.Runtime && data.Runtime !== "N/A" ? data.Runtime : "";
-          const director = data.Director && data.Director !== "N/A" ? data.Director : "";
-          const actors = data.Actors && data.Actors !== "N/A" ? data.Actors : "";
-          const genres = data.Genre && data.Genre !== "N/A"
+          const description = data.Plot     && data.Plot     !== "N/A" ? data.Plot     : "No description available.";
+          const year        = data.Year     && data.Year     !== "N/A" ? data.Year     : "";
+          const runtime     = data.Runtime  && data.Runtime  !== "N/A" ? data.Runtime  : "";
+          const director    = data.Director && data.Director !== "N/A" ? data.Director : "";
+          const actors      = data.Actors   && data.Actors   !== "N/A" ? data.Actors   : "";
+          const genres      = data.Genre    && data.Genre    !== "N/A"
             ? data.Genre.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
 
           const metaParts = [year, runtime].filter(Boolean);
-          const metaHTML = metaParts.length
-            ? `<div class="movie-meta">${metaParts.join('<span class="sep">·</span>')}</div>` : "";
-
+          const metaHTML  = metaParts.length ? `<div class="movie-meta">${metaParts.join('<span class="sep">·</span>')}</div>` : "";
           const genreHTML = genres ? `<div class="genre-chips">${genres}</div>` : "";
-
-          const crewHTML = (director || actors) ? `
+          const crewHTML  = (director || actors) ? `
             <div class="movie-crew">
               ${director ? `<div>Dir. <span>${director}</span></div>` : ""}
-              ${actors ? `<div>Cast <span>${actors}</span></div>` : ""}
+              ${actors   ? `<div>Cast <span>${actors}</span></div>`   : ""}
             </div>` : "";
 
-          const card = document.createElement("div");
+          const removeBtnHTML = isAdmin ? `<button class="remove-btn">Remove</button>` : "";
+
+          const card     = document.createElement("div");
           card.className = "movie-card";
-
-          const removeBtnHTML = isAdmin
-            ? `<button class="remove-btn">Remove</button>` : "";
-
           card.innerHTML = `
             <div class="poster-wrap">
               <img class="movie-poster" src="${poster}" alt="${movie.title} Poster" loading="lazy">
@@ -423,21 +890,16 @@
             </div>
           `;
 
-          // Replace the skeleton at the same position
-          if (skeletons[index]) {
-            container.replaceChild(card, skeletons[index]);
-          } else {
-            container.appendChild(card);
-          }
+          if (skeletons[index]) container.replaceChild(card, skeletons[index]);
+          else container.appendChild(card);
 
-          // Show "Read more" only if text is actually clamped
           const descEl = card.querySelector(".movie-description");
-          const btn = card.querySelector(".read-more-btn");
+          const rmBtn  = card.querySelector(".read-more-btn");
           if (descEl.scrollHeight > descEl.clientHeight + 2) {
-            btn.style.display = "inline";
-            btn.addEventListener("click", () => {
+            rmBtn.style.display = "inline";
+            rmBtn.addEventListener("click", () => {
               const expanded = descEl.classList.toggle("expanded");
-              btn.textContent = expanded ? "Read less ‹" : "Read more ›";
+              rmBtn.textContent = expanded ? "Read less ‹" : "Read more ›";
             });
           }
 
@@ -462,6 +924,7 @@
     });
   }
 
+  // ── Admin ─────────────────────────────────────────────────────────────
   document.getElementById("adminButton").addEventListener("click", () => {
     const password = prompt("Enter admin password:");
     if (password === adminPassword) {
@@ -476,20 +939,12 @@
   });
 
   document.getElementById("addMovieBtn").addEventListener("click", async () => {
-    const title = document.getElementById("newMovieTitle").value.trim();
+    const title   = document.getElementById("newMovieTitle").value.trim();
     const trailer = document.getElementById("newMovieTrailer").value.trim();
-
-    if (!title || !trailer) {
-      alert("Please enter both a movie title and trailer URL!");
-      return;
-    }
-
+    if (!title || !trailer) { alert("Please enter both a movie title and trailer URL!"); return; }
     try {
-      await fetch(
-        `${webAppURL}?action=add&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailer)}`,
-        { redirect: "follow" }
-      );
-      document.getElementById("newMovieTitle").value = "";
+      await fetch(`${webAppURL}?action=add&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailer)}`, { redirect: "follow" });
+      document.getElementById("newMovieTitle").value   = "";
       document.getElementById("newMovieTrailer").value = "";
       await fetchMovies();
     } catch (err) {
@@ -498,9 +953,10 @@
     }
   });
 
+  // ── Init ──────────────────────────────────────────────────────────────
+  fetchWatchlist();
   fetchMovies();
 </script>
 
 </body>
 </html>
-
