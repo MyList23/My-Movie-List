@@ -110,6 +110,83 @@
     .tab-btn.active { color: white; border-bottom-color: var(--blue); }
     .tab-btn.shows-tab.active { border-bottom-color: var(--purple); }
 
+    /* ── Recently Added Strip ── */
+    #recentStrip {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 40px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      overflow-x: auto;
+    }
+
+    #recentStrip::-webkit-scrollbar { display: none; }
+
+    .recent-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .recent-items {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 5px 10px 5px 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .recent-item img {
+      width: 24px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 3px;
+      background: #333;
+    }
+
+    .recent-item-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .recent-item-meta {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 1px;
+    }
+
+    .recent-new-badge {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--blue);
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .recent-item.is-show .recent-new-badge { background: var(--purple); }
+
     /* ── Admin form ── */
     #adminForm {
       display: none;
@@ -322,6 +399,17 @@
     }
 
     .remove-btn:hover { background: rgba(255,80,80,0.2); color: #ff6b6b; }
+
+    /* ── Random Pick highlight ── */
+    .movie-card.random-pick {
+      box-shadow: 0 0 0 3px var(--blue), 0 20px 50px rgba(39,139,245,0.4);
+      transform: translateY(-8px) scale(1.02);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .movie-card.random-pick.show-card {
+      box-shadow: 0 0 0 3px var(--purple), 0 20px 50px rgba(168,85,247,0.4);
+    }
 
     /* ── Skeleton ── */
     .skeleton {
@@ -717,6 +805,7 @@
   <h1>Kevin's Recommendations</h1>
   <div class="subtitle">Hand-picked movies, shows & anime worth your time</div>
   <div class="header-btns">
+    <button id="randomPickBtn">🎲 Random Pick</button>
     <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
     <button id="adminButton">Admin Mode</button>
   </div>
@@ -725,6 +814,11 @@
     <button class="tab-btn shows-tab" data-tab="shows">📺 Shows & Anime</button>
   </div>
 </header>
+
+<div id="recentStrip">
+  <span class="recent-label">Recently Added</span>
+  <div class="recent-items" id="recentItems"></div>
+</div>
 
 <div id="adminForm">
   <input  type="text" id="newTitle"   placeholder="Title">
@@ -1226,6 +1320,7 @@
     });
     const skeletons = movieContainer.querySelectorAll(".skeleton");
     [...movies].forEach((m, i) => buildCard(m, i, skeletons, movieContainer, false));
+    renderRecentStrip();
   }
 
   // ── Shows ─────────────────────────────────────────────────────────────
@@ -1254,6 +1349,7 @@
     });
     const skeletons = showContainer.querySelectorAll(".skeleton");
     [...shows].forEach((s, i) => buildCard(s, i, skeletons, showContainer, true));
+    renderRecentStrip();
   }
 
   // ── Admin ─────────────────────────────────────────────────────────────
@@ -1297,6 +1393,73 @@
       alert("Failed to add.");
       console.error(err);
     }
+  });
+
+  // ── Recently Added ────────────────────────────────────────────────────
+  function renderRecentStrip() {
+    const strip     = document.getElementById("recentStrip");
+    const container = document.getElementById("recentItems");
+
+    // Combine movies and shows, tag each with type, take last 3 overall
+    const taggedMovies = movies.map(m => ({ ...m, type: "movie" }));
+    const taggedShows  = shows.map(s  => ({ ...s, type: "show"  }));
+    const all          = [...taggedMovies, ...taggedShows];
+    const recent       = all.slice(-3).reverse(); // last 3, newest first
+
+    if (recent.length === 0) { strip.style.display = "none"; return; }
+
+    container.innerHTML = "";
+    strip.style.display = "flex";
+
+    recent.forEach(item => {
+      const isShow   = item.type === "show";
+      const omdbType = isShow ? "series" : "movie";
+
+      const el = document.createElement("div");
+      el.className = `recent-item${isShow ? ' is-show' : ''}`;
+      el.innerHTML = `
+        <img src="https://via.placeholder.com/24x34?text=..." alt="${item.title}">
+        <div>
+          <div class="recent-item-title">${item.title}</div>
+          <div class="recent-item-meta">${isShow ? 'Show / Anime' : 'Movie'}</div>
+        </div>
+        <span class="recent-new-badge">New</span>
+      `;
+
+      container.appendChild(el);
+
+      // Fetch poster in background
+      fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(item.title)}&type=${omdbType}&apikey=${apiKey}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.Poster && data.Poster !== "N/A") {
+            el.querySelector("img").src = data.Poster;
+          }
+          if (data.Year && data.Year !== "N/A") {
+            el.querySelector(".recent-item-meta").textContent = `${isShow ? 'Show' : 'Movie'} · ${data.Year}`;
+          }
+        })
+        .catch(() => {});
+    });
+  }
+
+  // ── Random Pick ───────────────────────────────────────────────────────
+  document.getElementById("randomPickBtn").addEventListener("click", () => {
+    const pool = activeTab === "shows"
+      ? showContainer.querySelectorAll(".movie-card")
+      : movieContainer.querySelectorAll(".movie-card");
+
+    if (pool.length === 0) return;
+
+    // Remove any existing highlight
+    document.querySelectorAll(".movie-card.random-pick").forEach(c => c.classList.remove("random-pick"));
+
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    pick.classList.add("random-pick");
+    pick.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Remove highlight after 3 seconds
+    setTimeout(() => pick.classList.remove("random-pick"), 3000);
   });
 
   // ── Init ──────────────────────────────────────────────────────────────
