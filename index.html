@@ -1632,6 +1632,8 @@
 
   // ── Shared modal opener (used by recent strip + random pick) ──────────
   function openModalForTitle(title, isShow, trailerURL, label) {
+    const isRandom = label === "🎲 Your Random Pick";
+    document.getElementById("modalReroll").style.display = isRandom ? "inline-block" : "none";
     const omdbType = isShow ? "series" : "movie";
     const modal    = document.getElementById("randomPickModal");
 
