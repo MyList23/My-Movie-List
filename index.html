@@ -400,16 +400,151 @@
 
     .remove-btn:hover { background: rgba(255,80,80,0.2); color: #ff6b6b; }
 
-    /* ── Random Pick highlight ── */
-    .movie-card.random-pick {
-      box-shadow: 0 0 0 3px var(--blue), 0 20px 50px rgba(39,139,245,0.4);
-      transform: translateY(-8px) scale(1.02);
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    /* ── Random Pick Modal ── */
+    #randomPickOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200;
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
 
-    .movie-card.random-pick.show-card {
-      box-shadow: 0 0 0 3px var(--purple), 0 20px 50px rgba(168,85,247,0.4);
+    #randomPickOverlay.open { display: flex; }
+
+    #randomPickModal {
+      background: #1a1a1a;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      max-width: 480px;
+      width: 100%;
+      overflow: hidden;
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative;
     }
+
+    #randomPickModal.is-show { border-color: rgba(168,85,247,0.25); }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    #randomPickModal .modal-poster-wrap {
+      position: relative;
+      height: 260px;
+      overflow: hidden;
+    }
+
+    #randomPickModal .modal-poster {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    #randomPickModal .modal-poster-fade {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(transparent, #1a1a1a);
+    }
+
+    #randomPickModal .modal-close {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: white;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 1;
+    }
+
+    #randomPickModal .modal-close:hover { background: rgba(0,0,0,0.9); }
+
+    #randomPickModal .modal-body {
+      padding: 16px 22px 24px;
+    }
+
+    #randomPickModal .modal-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 6px;
+    }
+
+    #randomPickModal.is-show .modal-label { color: var(--purple); }
+
+    #randomPickModal .modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    #randomPickModal .modal-meta {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    #randomPickModal .modal-rating {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    #randomPickModal .modal-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    #randomPickModal .modal-plot {
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 18px;
+    }
+
+    #randomPickModal .modal-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #randomPickModal .modal-reroll {
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #randomPickModal .modal-reroll:hover { background: rgba(255,255,255,0.15); }
 
     /* ── Skeleton ── */
     .skeleton {
@@ -829,6 +964,29 @@
   </select>
   <button id="addItemBtn">Add</button>
   
+</div>
+
+<!-- Random Pick Modal -->
+<div id="randomPickOverlay">
+  <div id="randomPickModal">
+    <div class="modal-poster-wrap">
+      <img class="modal-poster" id="modalPoster" src="" alt="">
+      <div class="modal-poster-fade"></div>
+      <button class="modal-close" id="randomPickClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-label" id="modalLabel">🎲 Your Random Pick</div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-rating" id="modalRating"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <div class="modal-genres" id="modalGenres"></div>
+      <div class="modal-plot" id="modalPlot"></div>
+      <div class="modal-actions">
+        <a class="trailer-btn" id="modalTrailer" href="#" target="_blank" rel="noopener noreferrer">▶ Trailer</a>
+        <button class="modal-reroll" id="modalReroll">🎲 Pick Another</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="watchlistOverlay"></div>
@@ -1443,23 +1601,59 @@
     });
   }
 
-  // ── Random Pick ───────────────────────────────────────────────────────
-  document.getElementById("randomPickBtn").addEventListener("click", () => {
+  // ── Random Pick Modal ─────────────────────────────────────────────────
+  function openRandomPick() {
     const pool = activeTab === "shows"
       ? showContainer.querySelectorAll(".movie-card")
       : movieContainer.querySelectorAll(".movie-card");
 
     if (pool.length === 0) return;
 
-    // Remove any existing highlight
-    document.querySelectorAll(".movie-card.random-pick").forEach(c => c.classList.remove("random-pick"));
+    const pick   = pool[Math.floor(Math.random() * pool.length)];
+    const isShow = pick.classList.contains("show-card");
 
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    pick.classList.add("random-pick");
-    pick.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Pull data directly from the rendered card
+    const title  = pick.querySelector(".movie-title").textContent;
+    const rating = pick.querySelector(".movie-rating").textContent;
+    const poster = pick.querySelector(".movie-poster").src;
+    const plot   = pick.querySelector(".movie-description").textContent;
+    const meta   = pick.querySelector(".movie-meta") ? pick.querySelector(".movie-meta").textContent : "";
+    const genres = pick.querySelector(".genre-chips") ? pick.querySelector(".genre-chips").innerHTML : "";
+    const trailer = !isShow && pick.querySelector(".trailer-btn") ? pick.querySelector(".trailer-btn").href : null;
 
-    // Remove highlight after 3 seconds
-    setTimeout(() => pick.classList.remove("random-pick"), 3000);
+    const modal = document.getElementById("randomPickModal");
+    modal.className = isShow ? "is-show" : "";
+
+    document.getElementById("modalPoster").src      = poster;
+    document.getElementById("modalPoster").alt      = title;
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalRating").textContent = rating;
+    document.getElementById("modalRating").style.color = pick.querySelector(".movie-rating").style.color;
+    document.getElementById("modalMeta").textContent  = meta;
+    document.getElementById("modalGenres").innerHTML  = genres;
+    document.getElementById("modalPlot").textContent  = plot;
+    document.getElementById("modalLabel").textContent = isShow ? "🎲 Your Random Pick" : "🎲 Your Random Pick";
+
+    const trailerBtn = document.getElementById("modalTrailer");
+    if (trailer) {
+      trailerBtn.href          = trailer;
+      trailerBtn.style.display = "inline-block";
+    } else {
+      trailerBtn.style.display = "none";
+    }
+
+    document.getElementById("randomPickOverlay").classList.add("open");
+  }
+
+  function closeRandomPick() {
+    document.getElementById("randomPickOverlay").classList.remove("open");
+  }
+
+  document.getElementById("randomPickBtn").addEventListener("click", openRandomPick);
+  document.getElementById("randomPickClose").addEventListener("click", closeRandomPick);
+  document.getElementById("modalReroll").addEventListener("click", openRandomPick);
+  document.getElementById("randomPickOverlay").addEventListener("click", e => {
+    if (e.target === document.getElementById("randomPickOverlay")) closeRandomPick();
   });
 
   // ── Init ──────────────────────────────────────────────────────────────
