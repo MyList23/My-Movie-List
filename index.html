@@ -455,6 +455,90 @@
 
     #watchlistAddRow button:hover { background: var(--blue-dark); }
 
+    #watchlistSearchResults {
+      flex-shrink: 0;
+      overflow-y: auto;
+      max-height: 280px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    #watchlistSearchResults:empty { display: none; }
+
+    #watchlistSearchResults::-webkit-scrollbar { width: 4px; }
+    #watchlistSearchResults::-webkit-scrollbar-track { background: transparent; }
+    #watchlistSearchResults::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: rgba(255,255,255,0.06); }
+
+    .search-result-item img {
+      width: 32px;
+      height: 46px;
+      object-fit: cover;
+      border-radius: 3px;
+      background: #333;
+      flex-shrink: 0;
+    }
+
+    .search-result-info { flex: 1; min-width: 0; }
+
+    .search-result-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .search-result-meta {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+
+    .search-result-type {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .search-result-type.movie { background: rgba(39,139,245,0.2); color: var(--blue); }
+    .search-result-type.show  { background: rgba(168,85,247,0.2); color: var(--purple); }
+
+    .search-results-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      padding: 8px 14px 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    #watchlistTypeSelect {
+      padding: 7px 6px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #1a1a1a;
+      color: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      width: 42px;
+    }
+
     #watchlistItems {
       flex: 1;
       min-height: 0;
@@ -667,9 +751,11 @@
   </div>
 
   <div id="watchlistAddRow">
-    <input type="text" id="watchlistInput" placeholder="Add anything to check out…">
-    <button id="watchlistAddBtn">+ Add</button>
+    <input type="text" id="watchlistInput" placeholder="Search to add…">
+    <button id="watchlistAddBtn">Search</button>
   </div>
+
+  <div id="watchlistSearchResults"></div>
 
   <div id="watchlistItems">
     <div class="watchlist-empty">Nothing here yet.<br>Type a title above to add it!</div>
@@ -764,7 +850,93 @@
   function setStatus(msg) { document.getElementById("watchlistStatus").textContent = msg; }
 
   // ── Watchlist: add ────────────────────────────────────────────────────
-  async function addToWatchlist(title) {
+  // ── Watchlist: search OMDB and show picker ───────────────────────────
+  async function searchAndShowResults(title) {
+    if (!title) return;
+    setStatus("Searching…");
+    const resultsEl = document.getElementById("watchlistSearchResults");
+    resultsEl.innerHTML = "";
+
+    try {
+      const res  = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${apiKey}`);
+      const data = await res.json();
+
+      if (data.Response !== "True" || !data.Search || data.Search.length === 0) {
+        setStatus("No results found.");
+        setTimeout(() => setStatus(""), 2000);
+        return;
+      }
+
+      setStatus("");
+
+      // Show up to 6 results
+      const results = data.Search.slice(0, 6);
+      resultsEl.innerHTML = `<div class="search-results-label">Select one to add</div>`;
+
+      results.forEach(item => {
+        const isShow   = item.Type === "series" || item.Type === "episode";
+        const typeKey  = isShow ? "show" : "movie";
+        const typeLabel = isShow ? "Series" : item.Type === "movie" ? "Movie" : item.Type;
+        const poster   = item.Poster && item.Poster !== "N/A" ? item.Poster : "https://via.placeholder.com/32x46?text=?";
+
+        const row = document.createElement("div");
+        row.className = "search-result-item";
+        row.innerHTML = `
+          <img src="${poster}" alt="${item.Title}">
+          <div class="search-result-info">
+            <div class="search-result-title">${item.Title}</div>
+            <div class="search-result-meta">${item.Year || ""}</div>
+          </div>
+          <span class="search-result-type ${typeKey}">${typeLabel}</span>
+        `;
+
+        row.addEventListener("click", () => addToWatchlistFromResult(item, typeKey));
+        resultsEl.appendChild(row);
+      });
+
+    } catch (e) {
+      setStatus("Search failed.");
+      setTimeout(() => setStatus(""), 2000);
+    }
+  }
+
+  async function addToWatchlistFromResult(omdbItem, typeKey) {
+    const resultsEl = document.getElementById("watchlistSearchResults");
+
+    if (watchlist.some(w => w.title.toLowerCase() === omdbItem.Title.toLowerCase())) {
+      setStatus("Already in your watchlist!");
+      setTimeout(() => setStatus(""), 2000);
+      return;
+    }
+
+    setStatus("Adding…");
+    resultsEl.innerHTML = "";
+
+    // Fetch full details for poster, rating etc
+    let poster = "https://via.placeholder.com/300x450?text=No+Image";
+    let year = "", rating = "";
+
+    try {
+      const res  = await fetch(`https://www.omdbapi.com/?i=${omdbItem.imdbID}&apikey=${apiKey}`);
+      const data = await res.json();
+      if (data.Response === "True") {
+        poster = data.Poster && data.Poster !== "N/A" ? data.Poster : poster;
+        year   = data.Year   && data.Year   !== "N/A" ? data.Year   : "";
+        rating = data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : "";
+      }
+    } catch (e) { /* use defaults */ }
+
+    const firstWatched = watchlist.findIndex(w => w.watched);
+    const insertAt     = firstWatched === -1 ? watchlist.length : firstWatched;
+    watchlist.splice(insertAt, 0, { title: omdbItem.Title, poster, year, rating, watched: false, type: typeKey });
+
+    await saveWatchlist();
+    updateWatchlistCount();
+    renderWatchlist();
+    document.getElementById("watchlistInput").value = "";
+  }
+
+  async function addToWatchlist(title, chosenType) {
     if (!title) return;
     if (watchlist.some(w => w.title.toLowerCase() === title.toLowerCase())) {
       setStatus("Already in your watchlist!");
@@ -772,35 +944,27 @@
       return;
     }
 
-    const guessedType = activeTab === "shows" ? "show" : "movie";
     setStatus("Looking up title…");
 
     let poster = "https://via.placeholder.com/300x450?text=No+Image";
-    let year = "", rating = "", found = title, detectedType = guessedType;
+    let year = "", rating = "", found = title;
+    const omdbType = chosenType === "show" ? "series" : "movie";
 
     try {
-      // Try as movie first, then as series
-      let res  = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&type=movie&apikey=${apiKey}`);
+      let res  = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&type=${omdbType}&apikey=${apiKey}`);
       let data = await res.json();
-
-      if (data.Response !== "True") {
-        res  = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&type=series&apikey=${apiKey}`);
-        data = await res.json();
-        if (data.Response === "True") detectedType = "show";
-      }
 
       if (data.Response === "True") {
         found  = data.Title  || title;
         poster = data.Poster && data.Poster !== "N/A" ? data.Poster : poster;
         year   = data.Year   && data.Year   !== "N/A" ? data.Year   : "";
         rating = data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : "";
-        if (data.Type === "series") detectedType = "show";
       }
     } catch (e) { /* use defaults */ }
 
     const firstWatched = watchlist.findIndex(w => w.watched);
     const insertAt     = firstWatched === -1 ? watchlist.length : firstWatched;
-    watchlist.splice(insertAt, 0, { title: found, poster, year, rating, watched: false, type: detectedType });
+    watchlist.splice(insertAt, 0, { title: found, poster, year, rating, watched: false, type: chosenType });
 
     await saveWatchlist();
     updateWatchlistCount();
@@ -928,15 +1092,20 @@
   document.getElementById("watchlistAddBtn").addEventListener("click", () => {
     const input = document.getElementById("watchlistInput");
     const val   = input.value.trim();
-    if (val) { addToWatchlist(val); input.value = ""; }
+    if (val) searchAndShowResults(val);
   });
 
   document.getElementById("watchlistInput").addEventListener("keydown", e => {
     if (e.key === "Enter") {
       const input = document.getElementById("watchlistInput");
       const val   = input.value.trim();
-      if (val) { addToWatchlist(val); input.value = ""; }
+      if (val) searchAndShowResults(val);
     }
+  });
+
+  // Clear search results when input is cleared
+  document.getElementById("watchlistInput").addEventListener("input", e => {
+    if (!e.target.value) document.getElementById("watchlistSearchResults").innerHTML = "";
   });
 
   // ── Generic card builder ──────────────────────────────────────────────
@@ -1039,7 +1208,7 @@
   // ── Movies ────────────────────────────────────────────────────────────
   async function fetchMovies() {
     try {
-      const res = await fetch(webAppURL, { redirect: "follow" });
+      const res = await fetch(`${webAppURL}?t=${Date.now()}`, { redirect: "follow" });
       movies    = await res.json();
       renderMovies();
     } catch (err) {
@@ -1062,7 +1231,7 @@
   // ── Shows ─────────────────────────────────────────────────────────────
   async function fetchShows() {
     try {
-      const res = await fetch(`${webAppURL}?action=getShows`, { redirect: "follow" });
+      const res = await fetch(`${webAppURL}?action=getShows&t=${Date.now()}`, { redirect: "follow" });
       const data = await res.json();
       shows = Array.isArray(data) ? data : [];
       renderShows();
