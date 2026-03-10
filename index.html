@@ -112,8 +112,9 @@
 
     /* ── Recently Added Strip ── */
     #recentStrip {
-      display: none;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 14px;
       padding: 10px 40px;
       background: rgba(255,255,255,0.03);
@@ -121,7 +122,33 @@
       overflow-x: auto;
     }
 
+    #recentStrip .recent-left { display: none; }
+
     #recentStrip::-webkit-scrollbar { display: none; }
+
+    .strip-btns {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .strip-btns button {
+      background: rgba(255,255,255,0.07);
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .strip-btns button:hover { background: rgba(255,255,255,0.14); }
+    .strip-btns #randomPickBtn { background: rgba(39,139,245,0.2); color: var(--blue); }
+    .strip-btns #randomPickBtn:hover { background: rgba(39,139,245,0.35); }
 
     .recent-label {
       font-size: 0.68rem;
@@ -939,11 +966,6 @@
 <header>
   <h1>Kevin's Recommendations</h1>
   <div class="subtitle">Hand-picked movies, shows & anime worth your time</div>
-  <div class="header-btns">
-    <button id="randomPickBtn">🎲 Random Pick</button>
-    <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
-    <button id="adminButton">Admin Mode</button>
-  </div>
   <div class="tabs">
     <button class="tab-btn active"    data-tab="movies">🎬 Movies</button>
     <button class="tab-btn shows-tab" data-tab="shows">📺 Shows & Anime</button>
@@ -951,8 +973,15 @@
 </header>
 
 <div id="recentStrip">
-  <span class="recent-label">Recently Added</span>
-  <div class="recent-items" id="recentItems"></div>
+  <div class="recent-left" style="display:flex;align-items:center;gap:14px;min-width:0;overflow:hidden;">
+    <span class="recent-label">Recently Added</span>
+    <div class="recent-items" id="recentItems"></div>
+  </div>
+  <div class="strip-btns">
+    <button id="randomPickBtn">🎲 Random Pick</button>
+    <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
+    <button id="adminButton">Admin Mode</button>
+  </div>
 </div>
 
 <div id="adminForm">
@@ -1555,19 +1584,18 @@
 
   // ── Recently Added ────────────────────────────────────────────────────
   function renderRecentStrip() {
-    const strip     = document.getElementById("recentStrip");
+    const left      = document.querySelector(".recent-left");
     const container = document.getElementById("recentItems");
 
-    // Combine movies and shows, tag each with type, take last 3 overall
     const taggedMovies = movies.map(m => ({ ...m, type: "movie" }));
     const taggedShows  = shows.map(s  => ({ ...s, type: "show"  }));
     const all          = [...taggedMovies, ...taggedShows];
-    const recent       = all.slice(-3).reverse(); // last 3, newest first
+    const recent       = all.slice(-3).reverse();
 
-    if (recent.length === 0) { strip.style.display = "none"; return; }
+    if (recent.length === 0) { left.style.display = "none"; return; }
 
+    left.style.display = "flex";
     container.innerHTML = "";
-    strip.style.display = "flex";
 
     recent.forEach(item => {
       const isShow   = item.type === "show";
@@ -1586,14 +1614,11 @@
 
       container.appendChild(el);
 
-      // Fetch poster in background
       fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(item.title)}&type=${omdbType}&apikey=${apiKey}`)
         .then(r => r.json())
         .then(data => {
-          if (data.Poster && data.Poster !== "N/A") {
-            el.querySelector("img").src = data.Poster;
-          }
-          if (data.Year && data.Year !== "N/A") {
+          if (data.Poster && data.Poster !== "N/A") el.querySelector("img").src = data.Poster;
+          if (data.Year   && data.Year   !== "N/A") {
             el.querySelector(".recent-item-meta").textContent = `${isShow ? 'Show' : 'Movie'} · ${data.Year}`;
           }
         })
