@@ -650,6 +650,7 @@
     <option value="show">Show / Anime</option>
   </select>
   <button id="addItemBtn">Add</button>
+  
 </div>
 
 <div id="watchlistOverlay"></div>
@@ -691,7 +692,7 @@
 <script>
   const apiKey        = "f994ef9b";
   const adminPassword = "kevin123";
-  const webAppURL     = "https://script.google.com/macros/s/AKfycbxZHo6_r0GK4gi20yNrS9x8aHpQWkwgmOYG60_zMImuMbIgplovazBzH4o-cMWbqtprug/exec";
+  const webAppURL     = "https://script.google.com/macros/s/AKfycbx39rXvDXduoYIrGF75V5sGs3elqTXrdZQn-DNaF4_fLda73ZWMyaGYw0LBSEArPIBBaw/exec";
 
   let isAdmin   = false;
   let movies    = [];
@@ -711,7 +712,13 @@
       activeTab = btn.dataset.tab;
       document.querySelectorAll(".content-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${activeTab}`).classList.add("active");
-      if (isAdmin) document.getElementById("newType").value = activeTab === "shows" ? "show" : "movie";
+      if (isAdmin) {
+        const typeSelect   = document.getElementById("newType");
+        const trailerInput = document.getElementById("newTrailer");
+        typeSelect.value         = activeTab === "shows" ? "show" : "movie";
+        trailerInput.style.display = activeTab === "shows" ? "none" : "";
+        trailerInput.value       = "";
+      }
     });
   });
 
@@ -832,12 +839,12 @@
 
   // ── Watchlist: promote to site ────────────────────────────────────────
   async function promoteToSite(title, trailerURL, type) {
-    if (!trailerURL) { setStatus("Paste a trailer URL first!"); setTimeout(() => setStatus(""), 2000); return; }
+    if (type !== "show" && !trailerURL) { setStatus("Paste a trailer URL first!"); setTimeout(() => setStatus(""), 2000); return; }
     setStatus("Adding to site…");
     const action = type === "show" ? "addShow" : "add";
     try {
       await fetch(
-        `${webAppURL}?action=${action}&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailerURL)}`,
+        `${webAppURL}?action=${action}&title=${encodeURIComponent(title)}&trailer=${encodeURIComponent(trailerURL || "")}`,
         { redirect: "follow" }
       );
       removeFromWatchlist(title);
@@ -885,7 +892,7 @@
           <button class="watchlist-item-remove" title="Remove">✕</button>
         </div>
         <div class="watchlist-promote-row ${item.watched ? 'visible' : ''}">
-          <input type="text" placeholder="Paste trailer URL…" class="promote-input">
+          ${isShow ? '' : '<input type="text" placeholder="Paste trailer URL…" class="promote-input">'}
           <button class="promote-btn">${isShow ? '➕ Add to Shows' : '➕ Add to Site'}</button>
         </div>
       `;
@@ -893,7 +900,8 @@
       div.querySelector("input[type='checkbox']").addEventListener("change", () => toggleWatched(item.title));
       div.querySelector(".watchlist-item-remove").addEventListener("click", () => removeFromWatchlist(item.title));
       div.querySelector(".promote-btn").addEventListener("click", () => {
-        const url = div.querySelector(".promote-input").value.trim();
+        const inputEl = div.querySelector(".promote-input");
+        const url = inputEl ? inputEl.value.trim() : "";
         promoteToSite(item.title, url, item.type);
       });
 
@@ -988,7 +996,7 @@
               <button class="read-more-btn">Read more ›</button>
             </div>
             <div class="movie-actions">
-              <a class="trailer-btn" href="${item.trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>
+              ${isShow ? '' : `<a class="trailer-btn" href="${item.trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>`}
               ${removeBtnHTML}
             </div>
           </div>
@@ -1094,11 +1102,19 @@
     }
   });
 
+  // Toggle trailer field visibility based on type selection
+  document.getElementById("newType").addEventListener("change", function() {
+    const trailerInput = document.getElementById("newTrailer");
+    trailerInput.style.display = this.value === "show" ? "none" : "";
+    trailerInput.value = "";
+  });
+
   document.getElementById("addItemBtn").addEventListener("click", async () => {
     const title   = document.getElementById("newTitle").value.trim();
     const trailer = document.getElementById("newTrailer").value.trim();
     const type    = document.getElementById("newType").value;
-    if (!title || !trailer) { alert("Please enter both a title and trailer URL!"); return; }
+    if (!title) { alert("Please enter a title!"); return; }
+    if (type === "movie" && !trailer) { alert("Please enter a trailer URL for movies!"); return; }
     const action = type === "show" ? "addShow" : "add";
     try {
       await fetch(
