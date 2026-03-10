@@ -682,7 +682,10 @@
       }
     } catch (e) { /* use defaults */ }
 
-    watchlist.push({ title: found, poster, year, rating, watched: false });
+    // Always insert before watched movies so new items appear at the top of the unwatched section
+    const firstWatchedIndex = watchlist.findIndex(w => w.watched);
+    const insertAt = firstWatchedIndex === -1 ? watchlist.length : firstWatchedIndex;
+    watchlist.splice(insertAt, 0, { title: found, poster, year, rating, watched: false });
     await saveWatchlist();
     updateWatchlistCount();
     renderWatchlist();
