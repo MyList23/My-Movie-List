@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Huhhhh Recommendations</title>
+  <title>Kevin's Recommendations</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
@@ -964,7 +964,7 @@
 <body>
 
 <header>
-  <h1>What to Watch</h1>
+  <h1>Kevin's Recommendations</h1>
   <div class="subtitle">Hand-picked movies, shows & anime worth your time</div>
   <div class="tabs">
     <button class="tab-btn active"    data-tab="movies">🎬 Movies</button>
@@ -1603,6 +1603,7 @@
 
       const el = document.createElement("div");
       el.className = `recent-item${isShow ? ' is-show' : ''}`;
+      el.style.cursor = "pointer";
       el.innerHTML = `
         <img src="https://via.placeholder.com/24x34?text=..." alt="${item.title}">
         <div>
@@ -1611,6 +1612,9 @@
         </div>
         <span class="recent-new-badge">New</span>
       `;
+
+      // Click opens the modal
+      el.addEventListener("click", () => openModalForTitle(item.title, isShow, item.trailer || null));
 
       container.appendChild(el);
 
@@ -1626,6 +1630,59 @@
     });
   }
 
+  // ── Shared modal opener (used by recent strip + random pick) ──────────
+  function openModalForTitle(title, isShow, trailerURL, label) {
+    const omdbType = isShow ? "series" : "movie";
+    const modal    = document.getElementById("randomPickModal");
+
+    // Show modal immediately with loading state
+    modal.className = isShow ? "is-show" : "";
+    document.getElementById("modalPoster").src        = "https://via.placeholder.com/480x260?text=Loading...";
+    document.getElementById("modalTitle").textContent  = title;
+    document.getElementById("modalRating").textContent = "";
+    document.getElementById("modalMeta").textContent   = "";
+    document.getElementById("modalGenres").innerHTML   = "";
+    document.getElementById("modalPlot").textContent   = "Loading…";
+    document.getElementById("modalLabel").textContent  = label || (isShow ? "📺 Show / Anime" : "🎬 Movie");
+
+    const trailerBtn = document.getElementById("modalTrailer");
+    if (trailerURL) {
+      trailerBtn.href          = trailerURL;
+      trailerBtn.style.display = "inline-block";
+    } else {
+      trailerBtn.style.display = "none";
+    }
+
+    document.getElementById("randomPickOverlay").classList.add("open");
+
+    // Fetch full details
+    fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&type=${omdbType}&apikey=${apiKey}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.Response !== "True") return;
+
+        const rating = data.imdbRating && data.imdbRating !== "N/A" ? parseFloat(data.imdbRating) : 0;
+        let ratingColor = '#db2360';
+        if (rating >= 8) ratingColor = '#21d07a';
+        else if (rating >= 5) ratingColor = '#d2d531';
+
+        const poster  = data.Poster  && data.Poster  !== "N/A" ? data.Poster  : "";
+        const year    = data.Year    && data.Year    !== "N/A" ? data.Year    : "";
+        const runtime = data.Runtime && data.Runtime !== "N/A" ? data.Runtime : "";
+        const seasons = data.totalSeasons && data.totalSeasons !== "N/A" ? `${data.totalSeasons} seasons` : "";
+        const genres  = data.Genre   && data.Genre   !== "N/A"
+          ? data.Genre.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
+
+        if (poster) document.getElementById("modalPoster").src = poster;
+        document.getElementById("modalRating").textContent  = `★ ${data.imdbRating || "N/A"} IMDb`;
+        document.getElementById("modalRating").style.color  = ratingColor;
+        document.getElementById("modalMeta").textContent    = [year, isShow ? seasons : runtime].filter(Boolean).join(" · ");
+        document.getElementById("modalGenres").innerHTML    = genres;
+        document.getElementById("modalPlot").textContent    = data.Plot && data.Plot !== "N/A" ? data.Plot : "";
+      })
+      .catch(() => {});
+  }
+
   // ── Random Pick Modal ─────────────────────────────────────────────────
   function openRandomPick() {
     const pool = activeTab === "shows"
@@ -1634,40 +1691,12 @@
 
     if (pool.length === 0) return;
 
-    const pick   = pool[Math.floor(Math.random() * pool.length)];
-    const isShow = pick.classList.contains("show-card");
-
-    // Pull data directly from the rendered card
-    const title  = pick.querySelector(".movie-title").textContent;
-    const rating = pick.querySelector(".movie-rating").textContent;
-    const poster = pick.querySelector(".movie-poster").src;
-    const plot   = pick.querySelector(".movie-description").textContent;
-    const meta   = pick.querySelector(".movie-meta") ? pick.querySelector(".movie-meta").textContent : "";
-    const genres = pick.querySelector(".genre-chips") ? pick.querySelector(".genre-chips").innerHTML : "";
+    const pick    = pool[Math.floor(Math.random() * pool.length)];
+    const isShow  = pick.classList.contains("show-card");
+    const title   = pick.querySelector(".movie-title").textContent;
     const trailer = !isShow && pick.querySelector(".trailer-btn") ? pick.querySelector(".trailer-btn").href : null;
 
-    const modal = document.getElementById("randomPickModal");
-    modal.className = isShow ? "is-show" : "";
-
-    document.getElementById("modalPoster").src      = poster;
-    document.getElementById("modalPoster").alt      = title;
-    document.getElementById("modalTitle").textContent = title;
-    document.getElementById("modalRating").textContent = rating;
-    document.getElementById("modalRating").style.color = pick.querySelector(".movie-rating").style.color;
-    document.getElementById("modalMeta").textContent  = meta;
-    document.getElementById("modalGenres").innerHTML  = genres;
-    document.getElementById("modalPlot").textContent  = plot;
-    document.getElementById("modalLabel").textContent = isShow ? "🎲 Your Random Pick" : "🎲 Your Random Pick";
-
-    const trailerBtn = document.getElementById("modalTrailer");
-    if (trailer) {
-      trailerBtn.href          = trailer;
-      trailerBtn.style.display = "inline-block";
-    } else {
-      trailerBtn.style.display = "none";
-    }
-
-    document.getElementById("randomPickOverlay").classList.add("open");
+    openModalForTitle(title, isShow, trailer, "🎲 Your Random Pick");
   }
 
   function closeRandomPick() {
