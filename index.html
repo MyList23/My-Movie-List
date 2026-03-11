@@ -1197,7 +1197,6 @@
     #adminForm input, #adminForm select { width: 100%; }
 
     .sort-select { font-size: 0.72rem; width: fit-content; max-width: fit-content; }
-    #sortMovies-wrap, #sortShows-wrap, #sortAnime-wrap { display: inline-flex; }
 
     .featured-pin { margin: 16px 16px 0; }
     .featured-pin-poster { width: 80px; }
@@ -1427,9 +1426,9 @@
       document.querySelectorAll(".content-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${activeTab}`).classList.add("active");
       // Swap sort dropdowns
-      document.getElementById("sortMovies-wrap").style.display = activeTab === "movies" ? "" : "none";
-      document.getElementById("sortShows-wrap").style.display  = activeTab === "shows"  ? "" : "none";
-      document.getElementById("sortAnime-wrap").style.display  = activeTab === "anime"  ? "" : "none";
+      document.getElementById("sortMovies-wrap").style.display = activeTab === "movies" ? "inline-flex" : "none";
+      document.getElementById("sortShows-wrap").style.display  = activeTab === "shows"  ? "inline-flex" : "none";
+      document.getElementById("sortAnime-wrap").style.display  = activeTab === "anime"  ? "inline-flex" : "none";
       // Swap card counts
       document.getElementById("countMovies").style.display = activeTab === "movies" ? "" : "none";
       document.getElementById("countShows").style.display  = activeTab === "shows"  ? "" : "none";
