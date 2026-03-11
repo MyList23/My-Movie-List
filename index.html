@@ -782,6 +782,22 @@
 
     .featured-unpin-btn:hover { border-color: rgba(255,255,255,0.4); color: white; }
 
+    .featured-info-btn {
+      display: none;
+      background: rgba(39,139,245,0.15);
+      border: 1px solid rgba(39,139,245,0.35);
+      color: var(--blue);
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .featured-info-btn:hover { background: rgba(39,139,245,0.3); border-color: var(--blue); }
+
     .pin-btn {
       background: none;
       border: none;
@@ -1232,6 +1248,7 @@
     .featured-pin-body { padding: 12px 14px; min-width: 0; flex: 1; }
     .featured-pin-title { font-size: 1.3rem; }
     .featured-pin-plot { -webkit-line-clamp: 2; }
+    .featured-info-btn { display: inline-block; }
 
     .movie-container {
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1953,6 +1970,7 @@
         <div class="featured-pin-meta" style="color:${rColor}">${rating}${meta ? ' · ' + meta : ''}</div>
         <div class="featured-pin-plot">${plot}</div>
         <div class="featured-pin-actions">
+          <button class="featured-info-btn">More Info</button>
           ${!isShow && trailer ? `<a class="trailer-btn" href="${trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>` : ""}
           ${isAdmin ? `<button class="featured-unpin-btn">Unpin</button>` : ""}
         </div>
@@ -1960,6 +1978,7 @@
     `;
     el.classList.add("visible");
 
+    el.querySelector(".featured-info-btn")?.addEventListener("click", () => openModalForTitle(title, isShow, trailer || null));
     el.querySelector(".featured-unpin-btn")?.addEventListener("click", () => setPinned(tab, null));
   }
 
