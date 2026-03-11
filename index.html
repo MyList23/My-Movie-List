@@ -648,70 +648,6 @@
     #randomPickModal .modal-reroll:hover { background: rgba(255,255,255,0.15); }
 
     /* ── Tab Toolbar ── */
-    .tab-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-      padding: 12px 40px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .search-icon-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      color: rgba(255,255,255,0.5);
-      width: 34px;
-      height: 34px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.9rem;
-      flex-shrink: 0;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .search-icon-btn:hover,
-    .search-icon-btn.active { background: rgba(255,255,255,0.12); color: white; }
-
-    .tab-search {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      padding: 7px 12px;
-      color: white;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem;
-      outline: none;
-      transition: border-color 0.2s, width 0.25s ease, opacity 0.2s;
-      width: 0;
-      opacity: 0;
-      pointer-events: none;
-      overflow: hidden;
-      padding: 0;
-      border-width: 0;
-    }
-
-    .tab-search.open {
-      width: 200px;
-      opacity: 1;
-      pointer-events: all;
-      padding: 7px 12px;
-      border-width: 1px;
-    }
-
-    .tab-search:focus { border-color: rgba(255,255,255,0.3); }
-    .tab-search::placeholder { color: rgba(255,255,255,0.3); }
-
     .sort-select {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
@@ -1260,10 +1196,7 @@
     #adminForm { padding: 12px 16px; }
     #adminForm input, #adminForm select { width: 100%; }
 
-    .tab-toolbar { padding: 10px 16px; gap: 8px; }
-    .tab-search.open { width: 150px; }
-    .sort-select { font-size: 0.75rem; }
-    .card-count { display: none; }
+    .sort-select { font-size: 0.75rem; width: fit-content; max-width: fit-content; }
 
     .featured-pin { margin: 16px 16px 0; }
     .featured-pin-poster { width: 80px; }
@@ -1313,6 +1246,21 @@
     <div class="tabs-right">
       <button id="randomPickBtn">🎲 Random Pick</button>
       <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
+      <div id="sortMovies-wrap"><select class="sort-select" id="sortMovies">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select></div>
+      <div id="sortShows-wrap" style="display:none"><select class="sort-select" id="sortShows">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select></div>
+      <div id="sortAnime-wrap" style="display:none"><select class="sort-select" id="sortAnime">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select></div>
       <button id="exitAdminBtn" style="display:none;background:rgba(255,80,80,0.15);color:#ff6b6b;">Exit Admin</button>
     </div>
   </div>
@@ -1323,37 +1271,10 @@
     <span class="recent-label">Recently Added</span>
     <div class="recent-items" id="recentItems"></div>
   </div>
-  <div class="strip-right" id="stripToolbar">
-    <div class="toolbar-right" id="toolbarMovies">
-      <input class="tab-search" id="searchMovies" placeholder="Search movies…">
-      <button class="search-icon-btn" id="searchToggleMovies" title="Search">🔍</button>
-      <select class="sort-select" id="sortMovies">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select>
-      <span class="card-count" id="countMovies"></span>
-    </div>
-    <div class="toolbar-right" id="toolbarShows" style="display:none">
-      <input class="tab-search" id="searchShows" placeholder="Search shows…">
-      <button class="search-icon-btn" id="searchToggleShows" title="Search">🔍</button>
-      <select class="sort-select" id="sortShows">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select>
-      <span class="card-count" id="countShows"></span>
-    </div>
-    <div class="toolbar-right" id="toolbarAnime" style="display:none">
-      <input class="tab-search" id="searchAnime" placeholder="Search anime…">
-      <button class="search-icon-btn" id="searchToggleAnime" title="Search">🔍</button>
-      <select class="sort-select" id="sortAnime">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select>
-      <span class="card-count" id="countAnime"></span>
-    </div>
+  <div class="strip-right">
+    <span class="card-count" id="countMovies"></span>
+    <span class="card-count" id="countShows" style="display:none"></span>
+    <span class="card-count" id="countAnime" style="display:none"></span>
   </div>
 </div>
 
@@ -1504,10 +1425,14 @@
       activeTab = btn.dataset.tab;
       document.querySelectorAll(".content-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${activeTab}`).classList.add("active");
-      // Swap toolbar
-      document.getElementById("toolbarMovies").style.display = activeTab === "movies" ? "flex" : "none";
-      document.getElementById("toolbarShows").style.display  = activeTab === "shows"  ? "flex" : "none";
-      document.getElementById("toolbarAnime").style.display  = activeTab === "anime"  ? "flex" : "none";
+      // Swap sort dropdowns
+      document.getElementById("sortMovies-wrap").style.display = activeTab === "movies" ? "" : "none";
+      document.getElementById("sortShows-wrap").style.display  = activeTab === "shows"  ? "" : "none";
+      document.getElementById("sortAnime-wrap").style.display  = activeTab === "anime"  ? "" : "none";
+      // Swap card counts
+      document.getElementById("countMovies").style.display = activeTab === "movies" ? "" : "none";
+      document.getElementById("countShows").style.display  = activeTab === "shows"  ? "" : "none";
+      document.getElementById("countAnime").style.display  = activeTab === "anime"  ? "" : "none";
       if (isAdmin) {
         const typeSelect   = document.getElementById("newType");
         const trailerInput = document.getElementById("newTrailer");
@@ -1877,82 +1802,45 @@
     if (!e.target.value) document.getElementById("watchlistSearchResults").innerHTML = "";
   });
 
-  // ── Search icon toggles ───────────────────────────────────────────────
-  ["Movies", "Shows", "Anime"].forEach(tab => {
-    const btn   = document.getElementById(`searchToggle${tab}`);
-    const input = document.getElementById(`search${tab}`);
-    btn.addEventListener("click", () => {
-      const isOpen = input.classList.toggle("open");
-      btn.classList.toggle("active", isOpen);
-      if (isOpen) input.focus();
-      else { input.value = ""; applySearchSort(tab.toLowerCase()); }
-    });
-    input.addEventListener("keydown", e => {
-      if (e.key === "Escape") {
-        input.classList.remove("open");
-        btn.classList.remove("active");
-        input.value = "";
-        applySearchSort(tab.toLowerCase());
-      }
-    });
-  });
-
-  // ── Search / Sort / Count ─────────────────────────────────────────────
+  // ── Sort / Count ──────────────────────────────────────────────────────
   function getTabConfig(tab) {
     const configs = {
-      movies: { container: movieContainer, searchId: "searchMovies", sortId: "sortMovies", countId: "countMovies", featuredId: "featuredMovies", label: "movie" },
-      shows:  { container: showContainer,  searchId: "searchShows",  sortId: "sortShows",  countId: "countShows",  featuredId: "featuredShows",  label: "show"  },
-      anime:  { container: animeContainer, searchId: "searchAnime",  sortId: "sortAnime",  countId: "countAnime",  featuredId: "featuredAnime",  label: "anime" },
+      movies: { container: movieContainer, sortId: "sortMovies", countId: "countMovies", featuredId: "featuredMovies", label: "movie" },
+      shows:  { container: showContainer,  sortId: "sortShows",  countId: "countShows",  featuredId: "featuredShows",  label: "show"  },
+      anime:  { container: animeContainer, sortId: "sortAnime",  countId: "countAnime",  featuredId: "featuredAnime",  label: "anime" },
     };
     return configs[tab];
   }
 
   function applySearchSort(tab) {
-    const cfg      = getTabConfig(tab);
-    const query    = document.getElementById(cfg.searchId).value.trim().toLowerCase();
-    const sortVal  = document.getElementById(cfg.sortId).value;
-    const cards    = [...cfg.container.querySelectorAll(".movie-card")];
+    const cfg     = getTabConfig(tab);
+    const sortVal = document.getElementById(cfg.sortId).value;
+    const cards   = [...cfg.container.querySelectorAll(".movie-card")];
 
-    // Filter
-    cards.forEach(card => {
-      const title = card.querySelector(".movie-title")?.textContent.toLowerCase() || "";
-      card.style.display = title.includes(query) ? "" : "none";
-    });
-
-    // Sort visible cards
-    const visible = cards.filter(c => c.style.display !== "none");
-    visible.sort((a, b) => {
+    cards.sort((a, b) => {
       if (sortVal === "rating") {
-        const ra = parseFloat(a.dataset.rating || 0);
-        const rb = parseFloat(b.dataset.rating || 0);
-        return rb - ra;
+        return parseFloat(b.dataset.rating || 0) - parseFloat(a.dataset.rating || 0);
       }
       if (sortVal === "alpha") {
         const ta = a.querySelector(".movie-title")?.textContent || "";
         const tb = b.querySelector(".movie-title")?.textContent || "";
         return ta.localeCompare(tb);
       }
-      // recently added — newest first, use addedAt timestamp if available
       const ta = a.dataset.addedAt ? new Date(a.dataset.addedAt).getTime() : -parseInt(a.dataset.index || 0);
       const tb = b.dataset.addedAt ? new Date(b.dataset.addedAt).getTime() : -parseInt(b.dataset.index || 0);
       return tb - ta;
     });
-    visible.forEach(card => cfg.container.appendChild(card));
+    cards.forEach(card => cfg.container.appendChild(card));
 
-    // Update count
-    const total   = cards.length;
-    const showing = visible.length;
-    const label   = tab === "movies" ? "movie" : tab === "shows" ? "show" : "anime";
-    const plural  = label + (total !== 1 ? "s" : "");
-    document.getElementById(cfg.countId).textContent = query
-      ? `${showing} of ${total} ${plural}`
-      : `${total} ${plural}`;
+    const total  = cards.length;
+    const label  = tab === "movies" ? "movie" : tab === "shows" ? "show" : "anime";
+    const plural = label + (total !== 1 ? "s" : "");
+    document.getElementById(cfg.countId).textContent = `${total} ${plural}`;
   }
 
   function wireToolbar(tab) {
     const cfg = getTabConfig(tab);
-    document.getElementById(cfg.searchId).addEventListener("input", () => applySearchSort(tab));
-    document.getElementById(cfg.sortId).addEventListener("change",  () => applySearchSort(tab));
+    document.getElementById(cfg.sortId).addEventListener("change", () => applySearchSort(tab));
   }
 
   // ── Featured Pin ──────────────────────────────────────────────────────
