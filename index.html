@@ -215,6 +215,65 @@
 
     .recent-item.is-show .recent-new-badge { background: var(--purple); }
 
+    /* ── Sidebar Recently Watched ── */
+    #sidebarRecentlyWatched {
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+
+    .srw-header {
+      margin-bottom: 10px;
+    }
+
+    .srw-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .srw-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+
+    .srw-scroll::-webkit-scrollbar { height: 3px; }
+    .srw-scroll::-webkit-scrollbar-track { background: transparent; }
+    .srw-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    .srw-card {
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .srw-card:hover { opacity: 0.75; }
+
+    .srw-card img {
+      width: 46px;
+      height: 66px;
+      object-fit: cover;
+      border-radius: 5px;
+      display: block;
+      background: #222;
+    }
+
+    .srw-card-title {
+      font-size: 0.62rem;
+      font-weight: 600;
+      margin-top: 5px;
+      width: 46px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(255,255,255,0.7);
+    }
+
     /* ── Admin form ── */
     #adminForm {
       display: none;
@@ -585,15 +644,39 @@
     .tab-toolbar {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 40px;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 40px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
-      flex-wrap: wrap;
     }
 
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .search-icon-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.5);
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .search-icon-btn:hover,
+    .search-icon-btn.active { background: rgba(255,255,255,0.12); color: white; }
+
     .tab-search {
-      flex: 1;
-      min-width: 160px;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 6px;
@@ -602,7 +685,21 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 0.85rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, width 0.25s ease, opacity 0.2s;
+      width: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+      padding: 0;
+      border-width: 0;
+    }
+
+    .tab-search.open {
+      width: 200px;
+      opacity: 1;
+      pointer-events: all;
+      padding: 7px 12px;
+      border-width: 1px;
     }
 
     .tab-search:focus { border-color: rgba(255,255,255,0.3); }
@@ -618,6 +715,7 @@
       font-size: 0.82rem;
       outline: none;
       cursor: pointer;
+      height: 34px;
     }
 
     .sort-select option { background: #1a1a1a; }
@@ -1142,7 +1240,7 @@
     #adminForm input, #adminForm select { width: 100%; }
 
     .tab-toolbar { padding: 10px 16px; gap: 8px; }
-    .tab-search { font-size: 0.78rem; }
+    .tab-search.open { width: 150px; }
     .sort-select { font-size: 0.75rem; }
     .card-count { display: none; }
 
@@ -1255,6 +1353,13 @@
     <button class="wl-filter-btn shows"  data-filter="anime">Anime</button>
   </div>
 
+  <div id="sidebarRecentlyWatched" style="display:none">
+    <div class="srw-header">
+      <span class="srw-label">Recently Watched</span>
+    </div>
+    <div class="srw-scroll" id="sidebarRecentlyWatchedItems"></div>
+  </div>
+
   <div id="watchlistAddRow">
     <input type="text" id="watchlistInput" placeholder="Search to add…">
     <button id="watchlistAddBtn">Search</button>
@@ -1270,13 +1375,16 @@
 
 <div id="panel-movies" class="content-panel active">
   <div class="tab-toolbar">
-    <input class="tab-search" id="searchMovies" placeholder="🔍 Search movies…">
-    <select class="sort-select" id="sortMovies">
-      <option value="rating">⭐ Top Rated</option>
-      <option value="alpha">🔤 A–Z</option>
-      <option value="added">🕐 Recently Added</option>
-    </select>
-    <span class="card-count" id="countMovies"></span>
+    <div class="toolbar-right">
+      <input class="tab-search" id="searchMovies" placeholder="Search movies…">
+      <button class="search-icon-btn" id="searchToggleMovies" title="Search">🔍</button>
+      <select class="sort-select" id="sortMovies">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select>
+      <span class="card-count" id="countMovies"></span>
+    </div>
   </div>
   <div class="featured-pin" id="featuredMovies"></div>
   <div class="movie-container" id="movieContainer">
@@ -1286,13 +1394,16 @@
 
 <div id="panel-shows" class="content-panel">
   <div class="tab-toolbar">
-    <input class="tab-search" id="searchShows" placeholder="🔍 Search shows…">
-    <select class="sort-select" id="sortShows">
-      <option value="rating">⭐ Top Rated</option>
-      <option value="alpha">🔤 A–Z</option>
-      <option value="added">🕐 Recently Added</option>
-    </select>
-    <span class="card-count" id="countShows"></span>
+    <div class="toolbar-right">
+      <input class="tab-search" id="searchShows" placeholder="Search shows…">
+      <button class="search-icon-btn" id="searchToggleShows" title="Search">🔍</button>
+      <select class="sort-select" id="sortShows">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select>
+      <span class="card-count" id="countShows"></span>
+    </div>
   </div>
   <div class="featured-pin" id="featuredShows"></div>
   <div class="movie-container" id="showContainer">
@@ -1302,13 +1413,16 @@
 
 <div id="panel-anime" class="content-panel">
   <div class="tab-toolbar">
-    <input class="tab-search" id="searchAnime" placeholder="🔍 Search anime…">
-    <select class="sort-select" id="sortAnime">
-      <option value="rating">⭐ Top Rated</option>
-      <option value="alpha">🔤 A–Z</option>
-      <option value="added">🕐 Recently Added</option>
-    </select>
-    <span class="card-count" id="countAnime"></span>
+    <div class="toolbar-right">
+      <input class="tab-search" id="searchAnime" placeholder="Search anime…">
+      <button class="search-icon-btn" id="searchToggleAnime" title="Search">🔍</button>
+      <select class="sort-select" id="sortAnime">
+        <option value="rating">⭐ Top Rated</option>
+        <option value="alpha">🔤 A–Z</option>
+        <option value="added">🕐 Recently Added</option>
+      </select>
+      <span class="card-count" id="countAnime"></span>
+    </div>
   </div>
   <div class="featured-pin" id="featuredAnime"></div>
   <div class="movie-container" id="animeContainer">
@@ -1380,6 +1494,7 @@
       watchlist = [];
     }
     renderWatchlist();
+    renderRecentlyWatched();
   }
 
   async function saveWatchlist() {
@@ -1541,11 +1656,13 @@
     const item = watchlist.find(w => w.title === title);
     if (item) {
       item.watched = !item.watched;
+      item.watchedAt = item.watched ? new Date().toISOString() : null;
       const unwatched = watchlist.filter(w => !w.watched);
       const watched   = watchlist.filter(w =>  w.watched);
       watchlist = [...unwatched, ...watched];
       saveWatchlist();
       renderWatchlist();
+      renderRecentlyWatched();
     }
   }
 
@@ -1644,7 +1761,39 @@
     });
   }
 
-  // ── Sidebar open / close ──────────────────────────────────────────────
+  // ── Recently Watched (sidebar) ────────────────────────────────────────
+  function renderRecentlyWatched() {
+    const section   = document.getElementById("sidebarRecentlyWatched");
+    const container = document.getElementById("sidebarRecentlyWatchedItems");
+
+    const watched = watchlist
+      .filter(w => w.watched)
+      .sort((a, b) => {
+        const ta = a.watchedAt ? new Date(a.watchedAt).getTime() : 0;
+        const tb = b.watchedAt ? new Date(b.watchedAt).getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 10);
+
+    if (watched.length === 0) { section.style.display = "none"; return; }
+
+    section.style.display = "block";
+    container.innerHTML = "";
+
+    watched.forEach(item => {
+      const isShow  = item.type === "show";
+      const isAnime = item.type === "anime";
+
+      const card = document.createElement("div");
+      card.className = "srw-card";
+      card.innerHTML = `
+        <img src="${item.poster || 'https://via.placeholder.com/46x66?text=?'}" alt="${item.title}">
+        <div class="srw-card-title">${item.title}</div>
+      `;
+      card.addEventListener("click", () => openModalForTitle(item.title, isShow || isAnime, null));
+      container.appendChild(card);
+    });
+  }
   function openSidebar() {
     document.getElementById("watchlistSidebar").classList.add("open");
     document.getElementById("watchlistOverlay").classList.add("open");
@@ -1678,6 +1827,26 @@
   // Clear search results when input is cleared
   document.getElementById("watchlistInput").addEventListener("input", e => {
     if (!e.target.value) document.getElementById("watchlistSearchResults").innerHTML = "";
+  });
+
+  // ── Search icon toggles ───────────────────────────────────────────────
+  ["Movies", "Shows", "Anime"].forEach(tab => {
+    const btn   = document.getElementById(`searchToggle${tab}`);
+    const input = document.getElementById(`search${tab}`);
+    btn.addEventListener("click", () => {
+      const isOpen = input.classList.toggle("open");
+      btn.classList.toggle("active", isOpen);
+      if (isOpen) input.focus();
+      else { input.value = ""; applySearchSort(tab.toLowerCase()); }
+    });
+    input.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        input.classList.remove("open");
+        btn.classList.remove("active");
+        input.value = "";
+        applySearchSort(tab.toLowerCase());
+      }
+    });
   });
 
   // ── Search / Sort / Count ─────────────────────────────────────────────
@@ -2083,6 +2252,7 @@
       ...movies.map(m => ({ ...m, _type: "movie" })),
       ...shows.map(s  => ({ ...s, _type: "show"  })),
       ...anime.map(a  => ({ ...a, _type: "anime" })),
+      ...watchlist.map(w => ({ ...w, _type: w.type || "movie" })),
     ];
     const item = allItems.find(i => i.title.toLowerCase() === title.toLowerCase()) || {};
 
