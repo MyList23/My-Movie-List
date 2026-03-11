@@ -1436,7 +1436,15 @@
 
 <script>
   const apiKey        = "f994ef9b";
-  const adminPassword = "kevin123";
+  const adminPasswordHash = "1f3bfa0d925578782ad3b34c85d0aed058601e2025a98dc7ede3b7000a2393e9";
+
+  async function checkPassword(input) {
+    const encoder = new TextEncoder();
+    const data    = encoder.encode(input);
+    const hashBuf = await crypto.subtle.digest("SHA-256", data);
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    return hashArr.map(b => b.toString(16).padStart(2, "0")).join("");
+  }
   const webAppURL     = "https://script.google.com/macros/s/AKfycbzx5hB9igWTlMTcYMIKcvIiDnbI5IFk2UNpZx-ydS1zUtyY5g5K1E8j04xKCew7-dL-dA/exec";
 
   let isAdmin   = false;
@@ -2155,9 +2163,11 @@
     applySearchSort("anime");
     renderRecentStrip();
   }
-  document.getElementById("adminButton").addEventListener("click", () => {
+  document.getElementById("adminButton").addEventListener("click", async () => {
     const password = prompt("Enter admin password:");
-    if (password === adminPassword) {
+    if (!password) return;
+    const hash = await checkPassword(password);
+    if (hash === adminPasswordHash) {
       isAdmin = true;
       document.getElementById("adminForm").style.display = "flex";
       document.getElementById("adminButton").style.display = "none";
