@@ -648,20 +648,51 @@
     #randomPickModal .modal-reroll:hover { background: rgba(255,255,255,0.15); }
 
     /* ── Tab Toolbar ── */
-    .sort-select {
+    .sort-wrap { position: relative; display: inline-block; }
+
+    .sort-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      padding: 7px 10px;
+      border-radius: 4px;
+      padding: 5px 12px;
       color: white;
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      outline: none;
+      font-size: 0.78rem;
       cursor: pointer;
-      height: 34px;
+      white-space: nowrap;
+      transition: background 0.2s;
     }
 
-    .sort-select option { background: #1a1a1a; }
+    .sort-btn:hover { background: rgba(255,255,255,0.12); }
+
+    .sort-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: #1e1e1e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 999;
+      min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .sort-dropdown.open { display: block; }
+
+    .sort-option {
+      padding: 9px 14px;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .sort-option:hover { background: rgba(255,255,255,0.07); }
+    .sort-option.selected { color: white; font-weight: 600; }
 
     .card-count {
       font-size: 0.75rem;
@@ -1196,10 +1227,9 @@
     #adminForm { padding: 12px 16px; }
     #adminForm input, #adminForm select { width: 100%; }
 
-    .sort-select { font-size: 0.72rem; width: fit-content; max-width: fit-content; }
-
     .featured-pin { margin: 16px 16px 0; }
-    .featured-pin-poster { width: 80px; }
+    .featured-pin-poster { width: 100px; align-self: stretch; height: auto; }
+    .featured-pin-body { padding: 12px 14px; }
     .featured-pin-title { font-size: 1.3rem; }
     .featured-pin-plot { -webkit-line-clamp: 2; }
 
@@ -1246,21 +1276,33 @@
     <div class="tabs-right">
       <button id="randomPickBtn">🎲 Random Pick</button>
       <button id="watchlistToggle">🎬 Watchlist <span id="watchlistCount"></span></button>
-      <div id="sortMovies-wrap"><select class="sort-select" id="sortMovies">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select></div>
-      <div id="sortShows-wrap" style="display:none"><select class="sort-select" id="sortShows">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select></div>
-      <div id="sortAnime-wrap" style="display:none"><select class="sort-select" id="sortAnime">
-        <option value="rating">⭐ Top Rated</option>
-        <option value="alpha">🔤 A–Z</option>
-        <option value="added">🕐 Recently Added</option>
-      </select></div>
+      <span id="sortMovies-wrap" class="sort-wrap">
+        <button class="sort-btn" id="sortMovies-btn">⭐ Top Rated ▾</button>
+        <div class="sort-dropdown" id="sortMovies-menu">
+          <div class="sort-option selected" data-value="rating">⭐ Top Rated</div>
+          <div class="sort-option" data-value="alpha">🔤 A–Z</div>
+          <div class="sort-option" data-value="added">🕐 Recently Added</div>
+        </div>
+        <input type="hidden" id="sortMovies" value="rating">
+      </span>
+      <span id="sortShows-wrap" class="sort-wrap" style="display:none">
+        <button class="sort-btn" id="sortShows-btn">⭐ Top Rated ▾</button>
+        <div class="sort-dropdown" id="sortShows-menu">
+          <div class="sort-option selected" data-value="rating">⭐ Top Rated</div>
+          <div class="sort-option" data-value="alpha">🔤 A–Z</div>
+          <div class="sort-option" data-value="added">🕐 Recently Added</div>
+        </div>
+        <input type="hidden" id="sortShows" value="rating">
+      </span>
+      <span id="sortAnime-wrap" class="sort-wrap" style="display:none">
+        <button class="sort-btn" id="sortAnime-btn">⭐ Top Rated ▾</button>
+        <div class="sort-dropdown" id="sortAnime-menu">
+          <div class="sort-option selected" data-value="rating">⭐ Top Rated</div>
+          <div class="sort-option" data-value="alpha">🔤 A–Z</div>
+          <div class="sort-option" data-value="added">🕐 Recently Added</div>
+        </div>
+        <input type="hidden" id="sortAnime" value="rating">
+      </span>
       <button id="exitAdminBtn" style="display:none;background:rgba(255,80,80,0.15);color:#ff6b6b;">Exit Admin</button>
     </div>
   </div>
@@ -1426,9 +1468,9 @@
       document.querySelectorAll(".content-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${activeTab}`).classList.add("active");
       // Swap sort dropdowns
-      document.getElementById("sortMovies-wrap").style.display = activeTab === "movies" ? "inline-flex" : "none";
-      document.getElementById("sortShows-wrap").style.display  = activeTab === "shows"  ? "inline-flex" : "none";
-      document.getElementById("sortAnime-wrap").style.display  = activeTab === "anime"  ? "inline-flex" : "none";
+      document.getElementById("sortMovies-wrap").style.display = activeTab === "movies" ? "inline" : "none";
+      document.getElementById("sortShows-wrap").style.display  = activeTab === "shows"  ? "inline" : "none";
+      document.getElementById("sortAnime-wrap").style.display  = activeTab === "anime"  ? "inline" : "none";
       // Swap card counts
       document.getElementById("countMovies").style.display = activeTab === "movies" ? "" : "none";
       document.getElementById("countShows").style.display  = activeTab === "shows"  ? "" : "none";
@@ -1840,8 +1882,33 @@
 
   function wireToolbar(tab) {
     const cfg = getTabConfig(tab);
-    document.getElementById(cfg.sortId).addEventListener("change", () => applySearchSort(tab));
+    const btn  = document.getElementById(cfg.sortId + "-btn");
+    const menu = document.getElementById(cfg.sortId + "-menu");
+    const hidden = document.getElementById(cfg.sortId);
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Close all other open menus
+      document.querySelectorAll(".sort-dropdown.open").forEach(m => { if (m !== menu) m.classList.remove("open"); });
+      menu.classList.toggle("open");
+    });
+
+    menu.querySelectorAll(".sort-option").forEach(opt => {
+      opt.addEventListener("click", () => {
+        hidden.value = opt.dataset.value;
+        btn.textContent = opt.textContent + " ▾";
+        menu.querySelectorAll(".sort-option").forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
+        menu.classList.remove("open");
+        applySearchSort(tab);
+      });
+    });
   }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".sort-dropdown.open").forEach(m => m.classList.remove("open"));
+  });
 
   // ── Featured Pin ──────────────────────────────────────────────────────
   function setPinned(tab, title) {
