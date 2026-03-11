@@ -1123,6 +1123,62 @@
       border-top: 1px solid rgba(255,255,255,0.05);
       min-height: 36px;
     }
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    :root { --sidebar-width: 100vw; }
+
+    header { padding: 20px 16px 0; }
+    h1 { font-size: 1.8rem; }
+    .subtitle { font-size: 0.78rem; }
+
+    .tab-btn { font-size: 0.78rem; padding: 10px 12px; }
+
+    #recentStrip { padding: 8px 16px; gap: 8px; }
+    .strip-btns { gap: 6px; }
+    .strip-btns button { font-size: 0.7rem; padding: 5px 8px; }
+    .recent-item-title { max-width: 80px; }
+
+    #adminForm { padding: 12px 16px; }
+    #adminForm input, #adminForm select { width: 100%; }
+
+    .tab-toolbar { padding: 10px 16px; gap: 8px; }
+    .tab-search { font-size: 0.78rem; }
+    .sort-select { font-size: 0.75rem; }
+    .card-count { display: none; }
+
+    .featured-pin { margin: 16px 16px 0; }
+    .featured-pin-poster { width: 80px; }
+    .featured-pin-title { font-size: 1.3rem; }
+    .featured-pin-plot { -webkit-line-clamp: 2; }
+
+    .movie-container {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .movie-poster { height: 230px; }
+
+    .movie-info { padding: 10px 12px 12px; }
+    .movie-title { font-size: 0.9rem; }
+    .movie-rating { font-size: 0.75rem; }
+    .genre-chip { font-size: 0.62rem; padding: 2px 6px; }
+    .movie-crew { font-size: 0.7rem; }
+    .movie-description { font-size: 0.75rem; }
+
+    #randomPickModal { margin: 0 8px; }
+    #randomPickModal .modal-poster-wrap { height: 200px; }
+    #randomPickModal .modal-title { font-size: 1.6rem; }
+    #randomPickModal .modal-body { padding: 12px 16px 20px; }
+
+    .watchlist-status { font-size: 0.68rem; }
+  }
+
+  @media (max-width: 400px) {
+    .movie-container { grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
+    .movie-poster { height: 200px; }
+    .strip-btns button span { display: none; }
+  }
   </style>
 </head>
 
@@ -1263,7 +1319,7 @@
 <script>
   const apiKey        = "f994ef9b";
   const adminPassword = "kevin123";
-  const webAppURL     = "https://script.google.com/macros/s/AKfycbzUXQkHy_cFzSlSjPy3E4cN_f-albF216GxxomxKYZ9D5BwkwWWuRjKGpjKDBsP5J-jZg/exec";
+  const webAppURL     = "https://script.google.com/macros/s/AKfycbzx5hB9igWTlMTcYMIKcvIiDnbI5IFk2UNpZx-ydS1zUtyY5g5K1E8j04xKCew7-dL-dA/exec";
 
   let isAdmin   = false;
   let movies    = [];
@@ -1734,132 +1790,122 @@
     el.querySelector(".featured-unpin-btn")?.addEventListener("click", () => setPinned(tab, null));
   }
 
-  // ── Generic card builder ──────────────────────────────────────────────
+  // ── Generic card builder (uses cached data from sheet — no OMDB calls) ──
   function buildCard(item, index, skeletons, container, type) {
     const isShow  = type === "show";
     const isAnime = type === "anime";
-    const omdbType = (isShow || isAnime) ? "series" : "movie";
-    fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(item.title)}&type=${omdbType}&apikey=${apiKey}`)
-      .then(res => res.json())
-      .then(data => {
-        const poster = data.Poster && data.Poster !== "N/A"
-          ? data.Poster : "https://via.placeholder.com/300x450?text=No+Image";
 
-        const rating = data.imdbRating && data.imdbRating !== "N/A"
-          ? parseFloat(data.imdbRating) : 0;
+    const poster      = item.poster  || "https://via.placeholder.com/300x450?text=No+Image";
+    const ratingVal   = parseFloat(item.rating) || 0;
+    const description = item.plot    || "No description available.";
+    const year        = item.year    || "";
+    const runtime     = item.runtime || "";
+    const director    = item.director || "";
+    const actors      = item.actors  || "";
+    const seasons     = item.seasons ? `${item.seasons} seasons` : "";
+    const genres      = item.genres
+      ? item.genres.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
 
-        let ratingColor = '#db2360';
-        if (rating >= 8) ratingColor = '#21d07a';
-        else if (rating >= 5) ratingColor = '#d2d531';
+    let ratingColor = '#db2360';
+    if (ratingVal >= 8) ratingColor = '#21d07a';
+    else if (ratingVal >= 5) ratingColor = '#d2d531';
 
-        const description = data.Plot     && data.Plot     !== "N/A" ? data.Plot     : "No description available.";
-        const year        = data.Year     && data.Year     !== "N/A" ? data.Year     : "";
-        const runtime     = data.Runtime  && data.Runtime  !== "N/A" ? data.Runtime  : "";
-        const director    = data.Director && data.Director !== "N/A" ? data.Director : "";
-        const actors      = data.Actors   && data.Actors   !== "N/A" ? data.Actors   : "";
-        const seasons     = data.totalSeasons && data.totalSeasons !== "N/A" ? `${data.totalSeasons} seasons` : "";
-        const genres      = data.Genre    && data.Genre    !== "N/A"
-          ? data.Genre.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
+    const metaRight = (isShow || isAnime) ? seasons : runtime;
+    const metaParts = [year, metaRight].filter(Boolean);
+    const metaHTML  = metaParts.length ? `<div class="movie-meta">${metaParts.join('<span class="sep">·</span>')}</div>` : "";
+    const genreHTML = genres ? `<div class="genre-chips">${genres}</div>` : "";
+    const dirLabel  = (isShow || isAnime) ? "Creator" : "Dir.";
+    const crewHTML  = (director || actors) ? `
+      <div class="movie-crew">
+        ${director ? `<div>${dirLabel} <span>${director}</span></div>` : ""}
+        ${actors   ? `<div>Cast <span>${actors}</span></div>`          : ""}
+      </div>` : "";
 
-        const metaRight = isShow ? seasons : runtime;
-        const metaParts = [year, metaRight].filter(Boolean);
-        const metaHTML  = metaParts.length ? `<div class="movie-meta">${metaParts.join('<span class="sep">·</span>')}</div>` : "";
-        const genreHTML = genres ? `<div class="genre-chips">${genres}</div>` : "";
-        const dirLabel  = isShow ? "Creator" : "Dir.";
-        const crewHTML  = (director || actors) ? `
-          <div class="movie-crew">
-            ${director ? `<div>${dirLabel} <span>${director}</span></div>` : ""}
-            ${actors   ? `<div>Cast <span>${actors}</span></div>`          : ""}
-          </div>` : "";
+    const removeBtnHTML = isAdmin ? `<button class="remove-btn">Remove</button>` : "";
+    let badgeHTML = "";
+    if (isAnime) badgeHTML = `<span class="type-badge" style="background:#f97316">Anime</span>`;
+    else if (isShow) badgeHTML = `<span class="type-badge">Show</span>`;
 
-        const removeBtnHTML = isAdmin ? `<button class="remove-btn">Remove</button>` : "";
-        let badgeHTML = "";
-        if (isAnime) badgeHTML = `<span class="type-badge" style="background:#f97316">Anime</span>`;
-        else if (isShow) badgeHTML = `<span class="type-badge">Show</span>`;
+    const tab      = isAnime ? "anime" : isShow ? "shows" : "movies";
+    const isPinned = pinned[tab] === item.title;
 
-        const card     = document.createElement("div");
-        let cardClass  = "movie-card";
-        if (isAnime) cardClass += " anime-card";
-        else if (isShow) cardClass += " show-card";
-        card.className   = cardClass;
-        card.dataset.rating  = rating;
-        card.dataset.index   = index;
-        card.dataset.addedAt = item.addedAt || "";
-        const tab = isAnime ? "anime" : isShow ? "shows" : "movies";
-        const isPinned = pinned[tab] === item.title;
-        card.innerHTML = `
-          <div class="poster-wrap">
-            <img class="movie-poster" src="${poster}" alt="${item.title} Poster" loading="lazy">
-            ${badgeHTML}
-            ${isAdmin ? `<button class="pin-btn${isPinned ? ' pinned' : ''}" title="${isPinned ? 'Unpin' : 'Pin as Featured'}">📌</button>` : ""}
-          </div>
-          <div class="movie-info">
-            <div class="movie-title">${item.title}</div>
-            <div class="movie-rating" style="color:${ratingColor}">★ ${data.imdbRating || "N/A"} IMDb</div>
-            ${metaHTML}
-            ${genreHTML}
-            ${crewHTML}
-            <div class="desc-wrap">
-              <p class="movie-description">${description}</p>
-              <button class="read-more-btn">Read more ›</button>
-            </div>
-            <div class="movie-actions">
-              ${(isShow || isAnime) ? '' : `<a class="trailer-btn" href="${item.trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>`}
-              ${removeBtnHTML}
-            </div>
-          </div>
-        `;
+    const card = document.createElement("div");
+    let cardClass = "movie-card";
+    if (isAnime) cardClass += " anime-card";
+    else if (isShow) cardClass += " show-card";
+    card.className       = cardClass;
+    card.dataset.rating  = ratingVal;
+    card.dataset.index   = index;
+    card.dataset.addedAt = item.addedAt || "";
 
-        if (skeletons[index]) container.replaceChild(card, skeletons[index]);
-        else container.appendChild(card);
+    card.innerHTML = `
+      <div class="poster-wrap">
+        <img class="movie-poster" src="${poster}" alt="${item.title} Poster" loading="lazy">
+        ${badgeHTML}
+        ${isAdmin ? `<button class="pin-btn${isPinned ? ' pinned' : ''}" title="${isPinned ? 'Unpin' : 'Pin as Featured'}">📌</button>` : ""}
+      </div>
+      <div class="movie-info">
+        <div class="movie-title">${item.title}</div>
+        <div class="movie-rating" style="color:${ratingColor}">★ ${item.rating || "N/A"} IMDb</div>
+        ${metaHTML}
+        ${genreHTML}
+        ${crewHTML}
+        <div class="desc-wrap">
+          <p class="movie-description">${description}</p>
+          <button class="read-more-btn">Read more ›</button>
+        </div>
+        <div class="movie-actions">
+          ${(isShow || isAnime) ? '' : `<a class="trailer-btn" href="${item.trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>`}
+          ${removeBtnHTML}
+        </div>
+      </div>
+    `;
 
-        // Wire pin button
-        const pinBtn = card.querySelector(".pin-btn");
-        if (pinBtn) {
-          pinBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const t = isAnime ? "anime" : isShow ? "shows" : "movies";
-            setPinned(t, pinned[t] === item.title ? null : item.title);
-          });
-        }
+    if (skeletons[index]) container.replaceChild(card, skeletons[index]);
+    else container.appendChild(card);
 
-        // Apply sort after each card resolves
-        const tabKey = isAnime ? "anime" : isShow ? "shows" : "movies";
-        applySearchSort(tabKey);
-
-        const descEl = card.querySelector(".movie-description");
-        const rmBtn  = card.querySelector(".read-more-btn");
-        if (descEl.scrollHeight > descEl.clientHeight + 2) {
-          rmBtn.style.display = "inline";
-          rmBtn.addEventListener("click", () => {
-            const expanded = descEl.classList.toggle("expanded");
-            rmBtn.textContent = expanded ? "Read less ‹" : "Read more ›";
-          });
-        }
-
-        if (isAdmin) {
-          let removeAction = "remove";
-          if (isShow)  removeAction = "removeShow";
-          if (isAnime) removeAction = "removeAnime";
-          card.querySelector(".remove-btn").addEventListener("click", async () => {
-            if (confirm(`Remove "${item.title}"?`)) {
-              try {
-                await fetch(`${webAppURL}?action=${removeAction}&index=${index}`, { redirect: "follow" });
-                if (isAnime) await fetchAnime();
-                else if (isShow) await fetchShows();
-                else await fetchMovies();
-              } catch (err) {
-                alert("Failed to remove.");
-                console.error(err);
-              }
-            }
-          });
-        }
-      })
-      .catch(err => {
-        console.error(`OMDB error for ${item.title}:`, err);
-        if (skeletons[index]) skeletons[index].remove();
+    // Wire pin button
+    const pinBtn = card.querySelector(".pin-btn");
+    if (pinBtn) {
+      pinBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setPinned(tab, pinned[tab] === item.title ? null : item.title);
       });
+    }
+
+    // Read more toggle
+    const descEl = card.querySelector(".movie-description");
+    const rmBtn  = card.querySelector(".read-more-btn");
+    if (descEl.scrollHeight > descEl.clientHeight + 2) {
+      rmBtn.style.display = "inline";
+      rmBtn.addEventListener("click", () => {
+        const expanded = descEl.classList.toggle("expanded");
+        rmBtn.textContent = expanded ? "Read less ‹" : "Read more ›";
+      });
+    }
+
+    // Remove button (admin only)
+    if (isAdmin) {
+      let removeAction = "remove";
+      if (isShow)  removeAction = "removeShow";
+      if (isAnime) removeAction = "removeAnime";
+      card.querySelector(".remove-btn").addEventListener("click", async () => {
+        if (confirm(`Remove "${item.title}"?`)) {
+          try {
+            await fetch(`${webAppURL}?action=${removeAction}&index=${index}`, { redirect: "follow" });
+            if (isAnime) await fetchAnime();
+            else if (isShow) await fetchShows();
+            else await fetchMovies();
+          } catch (err) {
+            alert("Failed to remove.");
+            console.error(err);
+          }
+        }
+      });
+    }
+
+    // Apply sort now that card is in DOM
+    applySearchSort(tab);
   }
 
   // ── Movies ────────────────────────────────────────────────────────────
@@ -1876,13 +1922,12 @@
 
   function renderMovies() {
     movieContainer.innerHTML = "";
-    movies.forEach(() => {
-      const s = document.createElement("div");
-      s.className = "skeleton";
-      movieContainer.appendChild(s);
-    });
-    const skeletons = movieContainer.querySelectorAll(".skeleton");
-    [...movies].forEach((m, i) => buildCard(m, i, skeletons, movieContainer, "movie"));
+    if (movies.length === 0) {
+      movieContainer.innerHTML = "<p style='padding:40px;color:rgba(255,255,255,0.4)'>No movies added yet.</p>";
+    } else {
+      movies.forEach((m, i) => buildCard(m, i, [], movieContainer, "movie"));
+    }
+    applySearchSort("movies");
     renderRecentStrip();
   }
 
@@ -1903,15 +1948,10 @@
     showContainer.innerHTML = "";
     if (shows.length === 0) {
       showContainer.innerHTML = "<p style='padding:40px;color:rgba(255,255,255,0.4)'>No shows added yet.</p>";
-      return;
+    } else {
+      shows.forEach((s, i) => buildCard(s, i, [], showContainer, "show"));
     }
-    shows.forEach(() => {
-      const s = document.createElement("div");
-      s.className = "skeleton";
-      showContainer.appendChild(s);
-    });
-    const skeletons = showContainer.querySelectorAll(".skeleton");
-    [...shows].forEach((s, i) => buildCard(s, i, skeletons, showContainer, "show"));
+    applySearchSort("shows");
     renderRecentStrip();
   }
 
@@ -1932,15 +1972,10 @@
     animeContainer.innerHTML = "";
     if (anime.length === 0) {
       animeContainer.innerHTML = "<p style='padding:40px;color:rgba(255,255,255,0.4)'>No anime added yet.</p>";
-      return;
+    } else {
+      anime.forEach((a, i) => buildCard(a, i, [], animeContainer, "anime"));
     }
-    anime.forEach(() => {
-      const s = document.createElement("div");
-      s.className = "skeleton";
-      animeContainer.appendChild(s);
-    });
-    const skeletons = animeContainer.querySelectorAll(".skeleton");
-    [...anime].forEach((a, i) => buildCard(a, i, skeletons, animeContainer, "anime"));
+    applySearchSort("anime");
     renderRecentStrip();
   }
   document.getElementById("adminButton").addEventListener("click", () => {
@@ -2017,90 +2052,76 @@
     recent.forEach(item => {
       const isAnime  = item.type === "anime";
       const isShow   = item.type === "show";
-      const omdbType = (isShow || isAnime) ? "series" : "movie";
       const typeLabel = isAnime ? "Anime" : isShow ? "Show" : "Movie";
+      const poster    = item.poster || "https://via.placeholder.com/24x34?text=?";
+      const year      = item.year   || "";
 
       const el = document.createElement("div");
       el.className = `recent-item${(isShow || isAnime) ? ' is-show' : ''}`;
       el.style.cursor = "pointer";
       el.innerHTML = `
-        <img src="https://via.placeholder.com/24x34?text=..." alt="${item.title}">
+        <img src="${poster}" alt="${item.title}">
         <div>
           <div class="recent-item-title">${item.title}</div>
-          <div class="recent-item-meta">${typeLabel}</div>
+          <div class="recent-item-meta">${year ? typeLabel + ' · ' + year : typeLabel}</div>
         </div>
         <span class="recent-new-badge">New</span>
       `;
 
       el.addEventListener("click", () => openModalForTitle(item.title, isShow || isAnime, item.trailer || null));
-
       container.appendChild(el);
-
-      fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(item.title)}&type=${omdbType}&apikey=${apiKey}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.Poster && data.Poster !== "N/A") el.querySelector("img").src = data.Poster;
-          if (data.Year   && data.Year   !== "N/A") {
-            el.querySelector(".recent-item-meta").textContent = `${typeLabel} · ${data.Year}`;
-          }
-        })
-        .catch(() => {});
     });
   }
 
-  // ── Shared modal opener (used by recent strip + random pick) ──────────
+  // ── Shared modal opener (uses cached data — no OMDB call) ────────────
   function openModalForTitle(title, isShow, trailerURL, label) {
     const isRandom = label === "🎲 Your Random Pick";
     document.getElementById("modalReroll").style.display = isRandom ? "inline-block" : "none";
-    const omdbType = isShow ? "series" : "movie";
-    const modal    = document.getElementById("randomPickModal");
 
-    // Show modal immediately with loading state
-    modal.className = isShow ? "is-show" : "";
-    document.getElementById("modalPoster").src        = "https://via.placeholder.com/480x260?text=Loading...";
+    // Find cached item from arrays
+    const allItems = [
+      ...movies.map(m => ({ ...m, _type: "movie" })),
+      ...shows.map(s  => ({ ...s, _type: "show"  })),
+      ...anime.map(a  => ({ ...a, _type: "anime" })),
+    ];
+    const item = allItems.find(i => i.title.toLowerCase() === title.toLowerCase()) || {};
+
+    const ratingVal = parseFloat(item.rating) || 0;
+    let ratingColor = '#db2360';
+    if (ratingVal >= 8) ratingColor = '#21d07a';
+    else if (ratingVal >= 5) ratingColor = '#d2d531';
+
+    const poster  = item.poster  || "https://via.placeholder.com/480x260?text=No+Image";
+    const year    = item.year    || "";
+    const runtime = item.runtime || "";
+    const seasons = item.seasons ? `${item.seasons} seasons` : "";
+    const genres  = item.genres
+      ? item.genres.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
+    const isSeriesType = isShow || item._type === "show" || item._type === "anime";
+
+    const modal = document.getElementById("randomPickModal");
+    modal.className = isSeriesType ? "is-show" : "";
+
+    document.getElementById("modalPoster").src        = poster;
+    document.getElementById("modalPoster").alt        = title;
     document.getElementById("modalTitle").textContent  = title;
-    document.getElementById("modalRating").textContent = "";
-    document.getElementById("modalMeta").textContent   = "";
-    document.getElementById("modalGenres").innerHTML   = "";
-    document.getElementById("modalPlot").textContent   = "Loading…";
-    document.getElementById("modalLabel").textContent  = label || (isShow ? "📺 Show / Anime" : "🎬 Movie");
+    document.getElementById("modalRating").textContent = `★ ${item.rating || "N/A"} IMDb`;
+    document.getElementById("modalRating").style.color = ratingColor;
+    document.getElementById("modalMeta").textContent   = [year, isSeriesType ? seasons : runtime].filter(Boolean).join(" · ");
+    document.getElementById("modalGenres").innerHTML   = genres;
+    document.getElementById("modalPlot").textContent   = item.plot || "";
+    document.getElementById("modalLabel").textContent  = label || (isSeriesType ? "📺 Show / Anime" : "🎬 Movie");
 
     const trailerBtn = document.getElementById("modalTrailer");
-    if (trailerURL) {
-      trailerBtn.href          = trailerURL;
+    const trailer    = trailerURL || item.trailer || null;
+    if (trailer && !isSeriesType) {
+      trailerBtn.href          = trailer;
       trailerBtn.style.display = "inline-block";
     } else {
       trailerBtn.style.display = "none";
     }
 
     document.getElementById("randomPickOverlay").classList.add("open");
-
-    // Fetch full details
-    fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&type=${omdbType}&apikey=${apiKey}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.Response !== "True") return;
-
-        const rating = data.imdbRating && data.imdbRating !== "N/A" ? parseFloat(data.imdbRating) : 0;
-        let ratingColor = '#db2360';
-        if (rating >= 8) ratingColor = '#21d07a';
-        else if (rating >= 5) ratingColor = '#d2d531';
-
-        const poster  = data.Poster  && data.Poster  !== "N/A" ? data.Poster  : "";
-        const year    = data.Year    && data.Year    !== "N/A" ? data.Year    : "";
-        const runtime = data.Runtime && data.Runtime !== "N/A" ? data.Runtime : "";
-        const seasons = data.totalSeasons && data.totalSeasons !== "N/A" ? `${data.totalSeasons} seasons` : "";
-        const genres  = data.Genre   && data.Genre   !== "N/A"
-          ? data.Genre.split(",").map(g => `<span class="genre-chip">${g.trim()}</span>`).join("") : "";
-
-        if (poster) document.getElementById("modalPoster").src = poster;
-        document.getElementById("modalRating").textContent  = `★ ${data.imdbRating || "N/A"} IMDb`;
-        document.getElementById("modalRating").style.color  = ratingColor;
-        document.getElementById("modalMeta").textContent    = [year, isShow ? seasons : runtime].filter(Boolean).join(" · ");
-        document.getElementById("modalGenres").innerHTML    = genres;
-        document.getElementById("modalPlot").textContent    = data.Plot && data.Plot !== "N/A" ? data.Plot : "";
-      })
-      .catch(() => {});
   }
 
   // ── Random Pick Modal ─────────────────────────────────────────────────
