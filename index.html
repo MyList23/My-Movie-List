@@ -581,7 +581,151 @@
 
     #randomPickModal .modal-reroll:hover { background: rgba(255,255,255,0.15); }
 
-    /* ── Skeleton ── */
+    /* ── Tab Toolbar ── */
+    .tab-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-wrap: wrap;
+    }
+
+    .tab-search {
+      flex: 1;
+      min-width: 160px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 7px 12px;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .tab-search:focus { border-color: rgba(255,255,255,0.3); }
+    .tab-search::placeholder { color: rgba(255,255,255,0.3); }
+
+    .sort-select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .sort-select option { background: #1a1a1a; }
+
+    .card-count {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.3);
+      white-space: nowrap;
+      margin-left: auto;
+    }
+
+    /* ── Featured Pin ── */
+    .featured-pin {
+      margin: 24px 40px 0;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      display: none;
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .featured-pin.visible { display: flex; }
+
+    .featured-pin-poster {
+      width: 120px;
+      flex-shrink: 0;
+      object-fit: cover;
+      display: block;
+    }
+
+    .featured-pin-body {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .featured-pin-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: gold;
+      margin-bottom: 2px;
+    }
+
+    .featured-pin-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.7rem;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .featured-pin-meta {
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .featured-pin-plot {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+      margin-top: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .featured-pin-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .featured-unpin-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .featured-unpin-btn:hover { border-color: rgba(255,255,255,0.4); color: white; }
+
+    .pin-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.2);
+      font-size: 1rem;
+      cursor: pointer;
+      position: absolute;
+      top: 8px; right: 8px;
+      transition: color 0.2s;
+      display: none;
+      padding: 4px;
+    }
+
+    .pin-btn:hover { color: gold; }
+    .movie-card:hover .pin-btn { display: block; }
+    .pin-btn.pinned { display: block; color: gold; }
     .skeleton {
       background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
       background-size: 200% 100%;
@@ -680,7 +824,7 @@
     #watchlistAddRow {
       padding: 12px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.07);
-      display: flex;
+      display: none;
       gap: 8px;
       flex-shrink: 0;
     }
@@ -819,7 +963,19 @@
       margin-top: 40px;
     }
 
-    .watchlist-item {
+    .series-type-picker {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      padding: 3px 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .series-type-picker option { background: #1a1a1a; }
       background: #1a1a1a;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.05);
@@ -1057,18 +1213,48 @@
 </div>
 
 <div id="panel-movies" class="content-panel active">
+  <div class="tab-toolbar">
+    <input class="tab-search" id="searchMovies" placeholder="🔍 Search movies…">
+    <select class="sort-select" id="sortMovies">
+      <option value="rating">⭐ Top Rated</option>
+      <option value="alpha">🔤 A–Z</option>
+      <option value="added">🕐 Recently Added</option>
+    </select>
+    <span class="card-count" id="countMovies"></span>
+  </div>
+  <div class="featured-pin" id="featuredMovies"></div>
   <div class="movie-container" id="movieContainer">
     <div class="loading-text">Loading movies…</div>
   </div>
 </div>
 
 <div id="panel-shows" class="content-panel">
+  <div class="tab-toolbar">
+    <input class="tab-search" id="searchShows" placeholder="🔍 Search shows…">
+    <select class="sort-select" id="sortShows">
+      <option value="rating">⭐ Top Rated</option>
+      <option value="alpha">🔤 A–Z</option>
+      <option value="added">🕐 Recently Added</option>
+    </select>
+    <span class="card-count" id="countShows"></span>
+  </div>
+  <div class="featured-pin" id="featuredShows"></div>
   <div class="movie-container" id="showContainer">
     <div class="loading-text">Loading shows…</div>
   </div>
 </div>
 
 <div id="panel-anime" class="content-panel">
+  <div class="tab-toolbar">
+    <input class="tab-search" id="searchAnime" placeholder="🔍 Search anime…">
+    <select class="sort-select" id="sortAnime">
+      <option value="rating">⭐ Top Rated</option>
+      <option value="alpha">🔤 A–Z</option>
+      <option value="added">🕐 Recently Added</option>
+    </select>
+    <span class="card-count" id="countAnime"></span>
+  </div>
+  <div class="featured-pin" id="featuredAnime"></div>
   <div class="movie-container" id="animeContainer">
     <div class="loading-text">Loading anime…</div>
   </div>
@@ -1077,15 +1263,20 @@
 <script>
   const apiKey        = "f994ef9b";
   const adminPassword = "kevin123";
-  const webAppURL     = "https://script.google.com/macros/s/AKfycbwE0Mm6ilK4Qs__28V5J2zxoGsdx_4chdCk9vAK7VP71kALd6Fy_r7PKUuXqx22PL06PA/exec";
+  const webAppURL     = "https://script.google.com/macros/s/AKfycbzUXQkHy_cFzSlSjPy3E4cN_f-albF216GxxomxKYZ9D5BwkwWWuRjKGpjKDBsP5J-jZg/exec";
 
   let isAdmin   = false;
   let movies    = [];
   let shows     = [];
   let anime     = [];
-  let watchlist = [];      // { title, poster, year, rating, watched, type:'movie'|'show'|'anime' }
+  let watchlist = [];
   let wlFilter  = "all";
   let activeTab = "movies";
+
+  // Pinned titles per tab
+  const pinned = { movies: null, shows: null, anime: null };
+  // Rating cache: title -> float
+  const ratingCache = {};
 
   const movieContainer = document.getElementById("movieContainer");
   const showContainer  = document.getElementById("showContainer");
@@ -1177,9 +1368,9 @@
       resultsEl.innerHTML = `<div class="search-results-label">Select one to add</div>`;
 
       results.forEach(item => {
-        const isShow   = item.Type === "series" || item.Type === "episode";
-        const typeKey  = isShow ? "show" : "movie";
-        const typeLabel = isShow ? "Series" : item.Type === "movie" ? "Movie" : item.Type;
+        const isSeries = item.Type === "series" || item.Type === "episode";
+        const typeKey  = isSeries ? "show" : "movie";
+        const typeLabel = isSeries ? "Series" : item.Type === "movie" ? "Movie" : item.Type;
         const poster   = item.Poster && item.Poster !== "N/A" ? item.Poster : "https://via.placeholder.com/32x46?text=?";
 
         const row = document.createElement("div");
@@ -1190,10 +1381,19 @@
             <div class="search-result-title">${item.Title}</div>
             <div class="search-result-meta">${item.Year || ""}</div>
           </div>
-          <span class="search-result-type ${typeKey}">${typeLabel}</span>
+          ${isSeries ? `
+            <select class="series-type-picker" onclick="event.stopPropagation()">
+              <option value="show">Show</option>
+              <option value="anime">Anime</option>
+            </select>
+          ` : `<span class="search-result-type ${typeKey}">${typeLabel}</span>`}
         `;
 
-        row.addEventListener("click", () => addToWatchlistFromResult(item, typeKey));
+        row.addEventListener("click", () => {
+          const picker = row.querySelector(".series-type-picker");
+          const finalType = picker ? picker.value : typeKey;
+          addToWatchlistFromResult(item, finalType);
+        });
         resultsEl.appendChild(row);
       });
 
@@ -1362,21 +1562,23 @@
             <div class="watchlist-item-title">${item.title}</div>
             <div class="watchlist-item-meta">${[item.year, item.rating ? '★ ' + item.rating : ''].filter(Boolean).join(' · ')}</div>
             <span class="wl-type-pill ${item.type}">${typeLabel}</span>
+            ${isAdmin ? `
             <label class="watchlist-item-watched ${item.watched ? 'checked' : ''}">
               <input type="checkbox" ${item.watched ? 'checked' : ''}>${item.watched ? 'Watched ✓' : 'Mark as watched'}
-            </label>
+            </label>` : `<span style="font-size:0.72rem;color:rgba(255,255,255,0.3)">${item.watched ? '✓ Watched' : ''}</span>`}
           </div>
-          <button class="watchlist-item-remove" title="Remove">✕</button>
+          ${isAdmin ? `<button class="watchlist-item-remove" title="Remove">✕</button>` : ''}
         </div>
+        ${isAdmin ? `
         <div class="watchlist-promote-row ${item.watched ? 'visible' : ''}">
           ${needsTrailer ? '<input type="text" placeholder="Paste trailer URL…" class="promote-input">' : ''}
           <button class="promote-btn">${promoteLabel}</button>
-        </div>
+        </div>` : ''}
       `;
 
-      div.querySelector("input[type='checkbox']").addEventListener("change", () => toggleWatched(item.title));
-      div.querySelector(".watchlist-item-remove").addEventListener("click", () => removeFromWatchlist(item.title));
-      div.querySelector(".promote-btn").addEventListener("click", () => {
+      div.querySelector("input[type='checkbox']")?.addEventListener("change", () => toggleWatched(item.title));
+      div.querySelector(".watchlist-item-remove")?.addEventListener("click", () => removeFromWatchlist(item.title));
+      div.querySelector(".promote-btn")?.addEventListener("click", () => {
         const inputEl = div.querySelector(".promote-input");
         const url = inputEl ? inputEl.value.trim() : "";
         promoteToSite(item.title, url, item.type);
@@ -1390,7 +1592,8 @@
   function openSidebar() {
     document.getElementById("watchlistSidebar").classList.add("open");
     document.getElementById("watchlistOverlay").classList.add("open");
-    document.getElementById("watchlistInput").focus();
+    // Only focus input if admin
+    if (isAdmin) document.getElementById("watchlistInput").focus();
   }
 
   function closeSidebar() {
@@ -1420,6 +1623,116 @@
   document.getElementById("watchlistInput").addEventListener("input", e => {
     if (!e.target.value) document.getElementById("watchlistSearchResults").innerHTML = "";
   });
+
+  // ── Search / Sort / Count ─────────────────────────────────────────────
+  function getTabConfig(tab) {
+    const configs = {
+      movies: { container: movieContainer, searchId: "searchMovies", sortId: "sortMovies", countId: "countMovies", featuredId: "featuredMovies", label: "movie" },
+      shows:  { container: showContainer,  searchId: "searchShows",  sortId: "sortShows",  countId: "countShows",  featuredId: "featuredShows",  label: "show"  },
+      anime:  { container: animeContainer, searchId: "searchAnime",  sortId: "sortAnime",  countId: "countAnime",  featuredId: "featuredAnime",  label: "anime" },
+    };
+    return configs[tab];
+  }
+
+  function applySearchSort(tab) {
+    const cfg      = getTabConfig(tab);
+    const query    = document.getElementById(cfg.searchId).value.trim().toLowerCase();
+    const sortVal  = document.getElementById(cfg.sortId).value;
+    const cards    = [...cfg.container.querySelectorAll(".movie-card")];
+
+    // Filter
+    cards.forEach(card => {
+      const title = card.querySelector(".movie-title")?.textContent.toLowerCase() || "";
+      card.style.display = title.includes(query) ? "" : "none";
+    });
+
+    // Sort visible cards
+    const visible = cards.filter(c => c.style.display !== "none");
+    visible.sort((a, b) => {
+      if (sortVal === "rating") {
+        const ra = parseFloat(a.dataset.rating || 0);
+        const rb = parseFloat(b.dataset.rating || 0);
+        return rb - ra;
+      }
+      if (sortVal === "alpha") {
+        const ta = a.querySelector(".movie-title")?.textContent || "";
+        const tb = b.querySelector(".movie-title")?.textContent || "";
+        return ta.localeCompare(tb);
+      }
+      // recently added — newest first, use addedAt timestamp if available
+      const ta = a.dataset.addedAt ? new Date(a.dataset.addedAt).getTime() : -parseInt(a.dataset.index || 0);
+      const tb = b.dataset.addedAt ? new Date(b.dataset.addedAt).getTime() : -parseInt(b.dataset.index || 0);
+      return tb - ta;
+    });
+    visible.forEach(card => cfg.container.appendChild(card));
+
+    // Update count
+    const total   = cards.length;
+    const showing = visible.length;
+    const label   = tab === "movies" ? "movie" : tab === "shows" ? "show" : "anime";
+    const plural  = label + (total !== 1 ? "s" : "");
+    document.getElementById(cfg.countId).textContent = query
+      ? `${showing} of ${total} ${plural}`
+      : `${total} ${plural}`;
+  }
+
+  function wireToolbar(tab) {
+    const cfg = getTabConfig(tab);
+    document.getElementById(cfg.searchId).addEventListener("input", () => applySearchSort(tab));
+    document.getElementById(cfg.sortId).addEventListener("change",  () => applySearchSort(tab));
+  }
+
+  // ── Featured Pin ──────────────────────────────────────────────────────
+  function setPinned(tab, title) {
+    pinned[tab] = title;
+    renderFeatured(tab);
+    // Update pin button states in container
+    const cfg = getTabConfig(tab);
+    cfg.container.querySelectorAll(".movie-card").forEach(card => {
+      const btn = card.querySelector(".pin-btn");
+      if (!btn) return;
+      const cardTitle = card.querySelector(".movie-title")?.textContent;
+      btn.classList.toggle("pinned", cardTitle === title);
+      btn.title = cardTitle === title ? "Unpin" : "Pin as Featured";
+    });
+  }
+
+  function renderFeatured(tab) {
+    const cfg = getTabConfig(tab);
+    const el  = document.getElementById(cfg.featuredId);
+    if (!pinned[tab]) { el.classList.remove("visible"); el.innerHTML = ""; return; }
+
+    const title    = pinned[tab];
+    const card     = [...getTabConfig(tab).container.querySelectorAll(".movie-card")]
+      .find(c => c.querySelector(".movie-title")?.textContent === title);
+
+    if (!card) { el.classList.remove("visible"); return; }
+
+    const poster  = card.querySelector(".movie-poster")?.src || "";
+    const rating  = card.querySelector(".movie-rating")?.textContent || "";
+    const rColor  = card.querySelector(".movie-rating")?.style.color || "white";
+    const meta    = card.querySelector(".movie-meta")?.textContent || "";
+    const plot    = card.querySelector(".movie-description")?.textContent || "";
+    const trailer = card.querySelector(".trailer-btn")?.href || null;
+    const isShow  = cfg.label !== "movie";
+
+    el.innerHTML = `
+      <img class="featured-pin-poster" src="${poster}" alt="${title}">
+      <div class="featured-pin-body">
+        <div class="featured-pin-label">⭐ Featured Pick</div>
+        <div class="featured-pin-title">${title}</div>
+        <div class="featured-pin-meta" style="color:${rColor}">${rating}${meta ? ' · ' + meta : ''}</div>
+        <div class="featured-pin-plot">${plot}</div>
+        <div class="featured-pin-actions">
+          ${!isShow && trailer ? `<a class="trailer-btn" href="${trailer}" target="_blank" rel="noopener noreferrer">▶ Trailer</a>` : ""}
+          ${isAdmin ? `<button class="featured-unpin-btn">Unpin</button>` : ""}
+        </div>
+      </div>
+    `;
+    el.classList.add("visible");
+
+    el.querySelector(".featured-unpin-btn")?.addEventListener("click", () => setPinned(tab, null));
+  }
 
   // ── Generic card builder ──────────────────────────────────────────────
   function buildCard(item, index, skeletons, container, type) {
@@ -1468,11 +1781,17 @@
         let cardClass  = "movie-card";
         if (isAnime) cardClass += " anime-card";
         else if (isShow) cardClass += " show-card";
-        card.className = cardClass;
+        card.className   = cardClass;
+        card.dataset.rating  = rating;
+        card.dataset.index   = index;
+        card.dataset.addedAt = item.addedAt || "";
+        const tab = isAnime ? "anime" : isShow ? "shows" : "movies";
+        const isPinned = pinned[tab] === item.title;
         card.innerHTML = `
           <div class="poster-wrap">
             <img class="movie-poster" src="${poster}" alt="${item.title} Poster" loading="lazy">
             ${badgeHTML}
+            ${isAdmin ? `<button class="pin-btn${isPinned ? ' pinned' : ''}" title="${isPinned ? 'Unpin' : 'Pin as Featured'}">📌</button>` : ""}
           </div>
           <div class="movie-info">
             <div class="movie-title">${item.title}</div>
@@ -1493,6 +1812,20 @@
 
         if (skeletons[index]) container.replaceChild(card, skeletons[index]);
         else container.appendChild(card);
+
+        // Wire pin button
+        const pinBtn = card.querySelector(".pin-btn");
+        if (pinBtn) {
+          pinBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const t = isAnime ? "anime" : isShow ? "shows" : "movies";
+            setPinned(t, pinned[t] === item.title ? null : item.title);
+          });
+        }
+
+        // Apply sort after each card resolves
+        const tabKey = isAnime ? "anime" : isShow ? "shows" : "movies";
+        applySearchSort(tabKey);
 
         const descEl = card.querySelector(".movie-description");
         const rmBtn  = card.querySelector(".read-more-btn");
@@ -1616,9 +1949,11 @@
       isAdmin = true;
       document.getElementById("adminForm").style.display = "flex";
       document.getElementById("adminButton").textContent = "Admin: ON";
+      document.getElementById("watchlistAddRow").style.display = "flex";
       renderMovies();
       renderShows();
       renderAnime();
+      renderWatchlist();
       alert("Admin mode unlocked!");
     } else {
       alert("Incorrect password!");
@@ -1662,11 +1997,17 @@
     const left      = document.querySelector(".recent-left");
     const container = document.getElementById("recentItems");
 
-    const taggedMovies = movies.map(m => ({ ...m, type: "movie" }));
-    const taggedShows  = shows.map(s  => ({ ...s, type: "show"  }));
-    const taggedAnime  = anime.map(a  => ({ ...a, type: "anime" }));
-    const all          = [...taggedMovies, ...taggedShows, ...taggedAnime];
-    const recent       = all.slice(-3).reverse();
+    // Combine all three, tag with type, sort by addedAt descending, take top 3
+    const all = [
+      ...movies.map(m => ({ ...m, type: "movie" })),
+      ...shows.map(s  => ({ ...s, type: "show"  })),
+      ...anime.map(a  => ({ ...a, type: "anime" })),
+    ].sort((a, b) => {
+      const ta = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+      const tb = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+      return tb - ta;
+    });
+    const recent = all.slice(0, 3);
 
     if (recent.length === 0) { left.style.display = "none"; return; }
 
@@ -1792,6 +2133,9 @@
   });
 
   // ── Init ──────────────────────────────────────────────────────────────
+  wireToolbar("movies");
+  wireToolbar("shows");
+  wireToolbar("anime");
   fetchWatchlist();
   fetchMovies();
   fetchShows();
