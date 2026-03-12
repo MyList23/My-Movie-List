@@ -2374,13 +2374,22 @@
   wireToolbar("movies");
   wireToolbar("shows");
   wireToolbar("anime");
-  fetchWatchlist();
-  fetchPinned().then(() => {
-    fetchMovies();
-    fetchShows();
-    fetchAnime();
-  });
-</script>
+
+  // Show skeletons immediately so page feels instant
+  function showSkeletons(container, count = 6) {
+    container.innerHTML = "";
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement("div");
+      s.className = "skeleton";
+      container.appendChild(s);
+    }
+  }
+  showSkeletons(movieContainer);
+  showSkeletons(showContainer);
+  showSkeletons(animeContainer);
+
+  // Fetch everything in parallel — no waiting for pinned before movies/shows/anime
+  Promise.all([fetchPinned(), fetchWatchlist(), fetchMovies(), fetchShows(), fetchAnime()]);</script>
 
 </body>
 </html>
